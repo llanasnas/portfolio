@@ -1,92 +1,65 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 @AGENTS.md
 
-# Project: Developer Progression Portfolio
+## Commands
 
-## Concept
+```bash
+npm run dev      # Start dev server (localhost:3000)
+npm run build    # Production build
+npm run lint     # ESLint check
+```
 
-This is not a traditional portfolio.
+No test suite configured.
 
-It is a gamified interactive experience where the user scrolls to explore the developer's career as a progression system.
+## Architecture
 
-The experience is based on:
+### Data Flow
 
-- XP (experience points)
-- Levels
-- Skill unlocking
-- Timeline progression
+```
+scroll position (0..1)
+  → mPos (0..8 continuous milestone index)
+  → cumulative XP (interpolated between milestones)
+  → useAnimatedNumber → animatedXp (smooth)
+  → computeLevel(xp) → current level + next level
+  → equipped skills (all skills from milestones 0..activeIdx)
+  → HUD + Timeline render
+```
 
-## Core UX
+### Key Files
 
-- A central "Profile HUD Card" is always visible (sticky)
-- As the user scrolls:
-  - XP increases
-  - Levels increase
-  - Skills are unlocked
-  - Career milestones appear
+| File | Role |
+|------|------|
+| `lib/progression-data.ts` | All static data: 6 levels, 8 milestones, 65 skills |
+| `lib/progression-system.ts` | Pure functions: `computeLevel(xp)`, `skillBySlug()`, `iconUrl()` |
+| `types/progression.ts` | Shared interfaces: `Level`, `Skill`, `Milestone`, `EquippedSkill` |
+| `components/home_page/HomeClient.tsx` | Main orchestrator — all scroll/XP/level state lives here |
+| `hooks/useScrollProgress.ts` | Returns scroll 0..1 via rAF |
+| `hooks/useAnimatedNumber.ts` | Cubic-out easing, 700ms duration |
+| `hooks/useMouseParallax.ts` | Sets `--mx`/`--my` CSS vars; `.blob` elements respond |
 
-The scroll acts as a progression mechanic.
+### Milestone Progression
 
-## Visual Style
+8 milestones, constants in `HomeClient.tsx`:
+- `INTRO = 0.1` — intro overlay disappears at 10% scroll
+- `OUTRO = 0.92` — outro overlay appears at 92% scroll
+- Each milestone covers `1/8` of scroll range
+- XP is linearly interpolated between milestones as user scrolls through each segment
 
-- Dark mode
-- Clean, modern, high-tech
-- Inspired by:
-  - Game UI systems
-  - SaaS dashboards
-- Subtle glow, glassmorphism, soft shadows
-- Avoid hacker cliché visuals
+### Skills System
 
-## Technical Stack
+Skills have rarity: `common | rare | epic`. Same skill can appear in multiple milestones — `EquippedSkill.count` tracks repetitions. The HUD badge shows ×N overlay when count > 1. Icon source: `/public/icons/simple-icons/{slug}.svg` (Simple Icons library).
 
-- Next.js (App Router)
-- TypeScript
-- TailwindCSS
-- GSAP + ScrollTrigger for animations
-- Lenis for smooth scrolling
+### Styling
 
-## Core Components
+Tailwind CSS v4 (`@tailwindcss/postcss`). All design tokens defined as CSS custom properties in `app/globals.css`:
+- `--bg-0..4` — dark backgrounds
+- `--fg-1..4` — text
+- `--grad-xp` — cyan→blue→indigo (XP bar)
+- `--grad-level` — violet→blue (level badge)
+- Rarity colors: common (gray), rare (cyan), epic (violet)
+- Milestone type colors: education (cyan), work (blue), freelance (violet), project (green)
 
-### 1. ProfileHUD
-
-- Name: Gerard Llanas Conesa
-- Role: Full Stack Developer
-- Level indicator
-- XP progress bar
-- Skill badges (dynamic)
-
-### 2. XP System
-
-- XP increases based on scroll position
-- Level thresholds
-- Smooth animated progress bar
-
-### 3. Timeline
-
-- Vertical scroll-based milestones
-- Each milestone:
-  - title
-  - description
-  - XP reward
-  - skills unlocked
-
-### 4. Skills
-
-- React
-- Node.js
-- TypeScript
-- JavaScript
-- PHP
-- SQL
-- MongoDB
-- React Native
-
-## Behavior Rules
-
-- XP must be tied to scroll progress
-- Level must update dynamically
-- Skills must appear progressively
-- Animations must be smooth and minimal (no clutter)
-
-## Goal
-
-Create a premium interactive experience that feels like a product, not a CV.
+Path alias `@/*` resolves to project root.

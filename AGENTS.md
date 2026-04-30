@@ -1,11 +1,5 @@
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-
-<!-- END:nextjs-agent-rules -->
-
 # Project: Developer Progression Portfolio
 
 ## Concept
@@ -29,8 +23,10 @@ The experience is based on:
   - Levels increase
   - Skills are unlocked
   - Career milestones appear
+  - Repeated skills move to the right in the profile card, and if they are repeated again, they move to the right again, and so on, creating a dynamic skill badge system that visually represents the developer's expertise and experience in each skill.
 
 The scroll acts as a progression mechanic.
+All content needs to be responsive and mobile-friendly, ensuring a seamless experience across devices. The design should adapt gracefully to different screen sizes, maintaining readability and usability on both desktop and mobile platforms.
 
 ## Visual Style
 
@@ -39,7 +35,7 @@ The scroll acts as a progression mechanic.
 - Inspired by:
   - Game UI systems
   - SaaS dashboards
-- Subtle glow, glassmorphism, soft shadows, rounded corners
+- Subtle glow, glassmorphism, soft shadows
 - Avoid hacker cliché visuals
 
 ## Technical Stack

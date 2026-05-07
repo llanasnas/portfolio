@@ -23,13 +23,13 @@ const PROJECTS = [
   },
   {
     id: "recipe-ai",
-    title: "Recipe AI",
+    title: "Recipe AI (In Development)",
     type: "AI App",
     rarity: "epic" as const,
     description:
       "Next.js app that extracts recipes & macros from any URL or image using Anthropic, OpenAI and local Ollama models.",
     tech: ["Next.js", "Anthropic API", "OpenAI API", "Ollama", "Tailwind CSS"],
-    url: null,
+    url: "https://github.com/llanasnas/Mincelly",
     year: "2026",
   },
   {

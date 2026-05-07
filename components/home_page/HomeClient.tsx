@@ -147,6 +147,15 @@ export function HomeClient() {
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const scrollToMilestone = useCallback((idx: number) => {
+    const shell = document.querySelector(".pin-shell") as HTMLElement | null;
+    if (!shell) return;
+    const max = shell.offsetHeight - window.innerHeight;
+    if (max <= 0) return;
+    const targetPinScroll = INTRO + idx * STEP;
+    window.scrollTo({ top: targetPinScroll * max, behavior: "smooth" });
+  }, []);
+
   return (
     <>
       {/* Animated background */}
@@ -168,7 +177,7 @@ export function HomeClient() {
           LV {levelObj.current.level}
           <span className="chrome-level__title">{levelObj.current.title}</span>
         </div>
-        <div className="scrub-meta">
+        <div className="scrub-meta hidden md:flex">
           <span>
             Milestone{" "}
             <span className="num">
@@ -183,7 +192,7 @@ export function HomeClient() {
       </div>
 
       {/* Scroll pin shell */}
-      <main className="pin-shell relative z-10">
+      <main className="pin-shell relative z-10 mt-10 md:mt-0">
         <div className="pin-stage">
           {/* Intro overlay */}
           <div className={`intro-title${!showIntro ? " is-fading" : ""}`}>
@@ -202,6 +211,7 @@ export function HomeClient() {
             activeIdx={activeIdx}
             railPct={railPct}
             onScrollToContact={scrollToContact}
+            onScrollToMilestone={scrollToMilestone}
           />
         </div>
       </main>

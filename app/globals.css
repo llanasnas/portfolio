@@ -5,6 +5,9 @@
  * Google Fonts loaded via next/font in layout.tsx
  * ================================================================ */
 :root {
+  /* LAYOUT */
+  --header-h: 56px;
+
   /* COLOR â€” BASE / SURFACES */
   --bg-0: #05060a;
   --bg-1: #0a0c14;
@@ -275,7 +278,7 @@ body {
 /* ============== Top chrome ============== */
 .top-chrome {
   position: fixed;
-  top: 0;
+  top: var(--header-h);
   left: 0;
   right: 0;
   z-index: 60;
@@ -312,7 +315,6 @@ body {
   color: var(--fg-3);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  display: flex;
   gap: 14px;
   align-items: center;
 }
@@ -1079,8 +1081,10 @@ body {
   left: 50%;
   top: 18%;
   transform: translateX(-50%);
+  padding: 10px;
+  background-color: var(--grad-level);
   text-align: center;
-  z-index: 4;
+  z-index: 6;
   pointer-events: none;
   transition:
     opacity 600ms var(--ease-out),
@@ -1116,7 +1120,7 @@ body {
   top: 18%;
   transform: translateX(-50%);
   text-align: center;
-  z-index: 4;
+  z-index: 16;
   pointer-events: none;
   opacity: 0;
   transition: opacity 600ms var(--ease-out);
@@ -1136,6 +1140,10 @@ body {
 
 /* ============== Mobile ============== */
 @media (max-width: 760px) {
+  :root {
+    --header-h: 48px;
+  }
+
   /* --- HUD collapsed bar --- */
   .hud-collapsed-bar {
     display: flex;
@@ -1198,9 +1206,6 @@ body {
   .hud-skills {
     margin-top: 10px;
     padding-top: 10px;
-  }
-  .hud-skills-grid {
-    max-height: 80px;
   }
 
   /* --- Timeline card --- */
@@ -1375,6 +1380,8 @@ body {
 .chrome-level__title {
   color: var(--fg-4);
   font-size: 9px;
+  display: flex;
+  align-items: center;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 500;
@@ -1794,6 +1801,7 @@ body {
   padding: 80px 0 120px;
   border-top: 1px solid var(--glass-stroke);
   color: var(--fg-1);
+  background: #0a0c1442;
 }
 /* Ensure placeholder text is legible */
 .contact-section input::placeholder,
@@ -2022,6 +2030,9 @@ body {
 }
 
 :root {
+  /* LAYOUT */
+  --header-h: 56px;
+
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -2035,6 +2046,9 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* LAYOUT */
+    --header-h: 56px;
+
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -2044,4 +2058,227 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ============== Header nav links ============== */
+.nav-link-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    color 200ms var(--ease-out),
+    background 200ms var(--ease-out);
+  text-decoration: none;
+}
+.nav-link-btn:hover {
+  color: var(--fg-1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 13px 4px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--glass-stroke);
+  cursor: pointer;
+  transition: color 200ms var(--ease-out);
+  text-decoration: none;
+}
+.mobile-nav-item:last-child {
+  border-bottom: none;
+}
+.mobile-nav-item:hover {
+  color: var(--fg-1);
+}
+/* ============================================
+   Lenis smooth scroll (requerido por Lenis)
+   ============================================ */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ============================================
+   Custom cursor (solo en dispositivos con puntero fino)
+   ============================================ */
+@media (pointer: fine) {
+  .has-custom-cursor,
+  .has-custom-cursor a,
+  .has-custom-cursor button {
+    cursor: none;
+  }
+}
+
+.gl-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--fg-1);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate3d(-50%, -50%, 0);
+  mix-blend-mode: difference;
+  transition:
+    width 0.3s cubic-bezier(0.2, 0.9, 0.2, 1),
+    height 0.3s cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 0.3s ease;
+  will-change: transform;
+}
+.gl-cursor[data-hover="true"] {
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 1px solid var(--fg-1);
+}
+
+/* ============================================
+   Animated gradient (para la palabra "Conesa")
+   ============================================ */
+@keyframes gl-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.gl-animated-gradient {
+  background-size: 200% 200%;
+  animation: gl-gradient-shift 8s ease-in-out infinite;
+}
+
+/* ============================================
+   Reveal: estado inicial. GSAP los anima.
+   No usar opacity:0 sin JS porque romperíamos no-JS
+   ============================================ */
+.gl-reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  will-change: transform, opacity;
+}
+.gl-char {
+  display: inline-block;
+  transform: translate3d(0, 110%, 0);
+  will-change: transform;
+}
+.gl-char-wrap {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 1;
+}
+
+/* ============================================
+   Grid pattern background (sutil)
+   ============================================ */
+.gl-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    black 30%,
+    transparent 75%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    black 30%,
+    transparent 75%
+  );
+}
+
+/* ============================================
+   Noise texture (el SVG va inline, esto es la wrapper)
+   ============================================ */
+.gl-noise {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+/* ============================================
+   Tilt card glow that follows cursor
+   ============================================ */
+.gl-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1);
+  will-change: transform;
+}
+.gl-tilt-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 220px at var(--mx, 50%) var(--my, 50%),
+    rgba(184, 123, 255, 0.18),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.gl-tilt:hover .gl-tilt-glow {
+  opacity: 1;
+}
+
+/* ============================================
+   Respeto a quien prefiere menos movimiento
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  .gl-animated-gradient,
+  .gl-reveal,
+  .gl-char {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ============== Rail node as button ============== */
+button.rail-node {
+  appearance: none;
+  background: var(--bg-3);
+  border: 2px solid var(--glass-stroke-strong);
+  padding: 0;
+  cursor: pointer;
+}
+button.rail-node:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
 }

@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import type { Milestone } from "@/types/progression";
 import { milestoneRarity } from "@/lib/progression-system";
 import { SkillBadge } from "./skills";
-
-function clamp(v: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, v));
-}
 
 interface TimelineProps {
   milestones: Milestone[];
@@ -15,6 +17,7 @@ interface TimelineProps {
   activeIdx: number;
   railPct: number;
   onScrollToContact: () => void;
+  onScrollToMilestone: (idx: number) => void;
 }
 
 export function Timeline({
@@ -23,9 +26,11 @@ export function Timeline({
   activeIdx,
   railPct,
   onScrollToContact,
+  onScrollToMilestone,
 }: TimelineProps) {
   const N = milestones.length;
   const [innerWidth, setInnerWidth] = useState(0);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInnerWidth(window.innerWidth);
@@ -34,8 +39,53 @@ export function Timeline({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Mobile: convert horizontal swipe into vertical page scroll
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    let startX = 0;
+    let startY = 0;
+    let scrollStart = 0;
+    let tracking = false;
+
+    function onTouchStart(e: TouchEvent) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      scrollStart = window.scrollY;
+      tracking = true;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (!tracking) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      // Only intercept clearly horizontal gestures
+      if (Math.abs(dx) < Math.abs(dy) * 0.8) return;
+      e.preventDefault();
+      // 1 px swipe ≈ 1.6 px vertical scroll (empirical)
+      window.scrollTo({
+        top: scrollStart - dx * 1.6,
+        behavior: "instant" as ScrollBehavior,
+      });
+    }
+
+    function onTouchEnd() {
+      tracking = false;
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, []);
+
   const cardWidth = useMemo(() => {
-    if (innerWidth === 0) return 440 + window.innerWidth * 0.08;
+    if (innerWidth === 0) return 440; // SSR / first render: default desktop width
     // Must match CSS: mobile ≤760px → width: min(320px, 100vw - 48px)
     const slideWidth = innerWidth <= 760 ? Math.min(320, innerWidth - 48) : 440;
     return slideWidth + innerWidth * 0.08;
@@ -43,7 +93,7 @@ export function Timeline({
   const trackTransform = `translate3d(${-mPos * cardWidth}px, 0, 0)`;
 
   return (
-    <div className="track-wrap p-12 md:p-12">
+    <div ref={wrapRef} className="track-wrap p-12 md:p-12">
       <div
         className="track-rail"
         style={{ "--prog-pct": `${railPct}%` } as CSSProperties}
@@ -53,8 +103,11 @@ export function Timeline({
           const passed = i < activeIdx;
           const isActive = i === activeIdx;
           return (
-            <div
+            <button
               key={i}
+              type="button"
+              onClick={() => onScrollToMilestone(i)}
+              aria-label={`Go to milestone ${i + 1}: ${m.title}`}
               className={[
                 "rail-node",
                 passed ? "is-passed" : "",
@@ -68,7 +121,7 @@ export function Timeline({
               <span className="rail-node-label">
                 {m.dateRange.split(" – ")[0]}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>

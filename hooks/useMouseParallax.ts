@@ -2,33 +2,52 @@
 
 import { useEffect } from "react";
 
+/**
+ * Subtle blob parallax follow on desktop only.
+ * - Skips on touch / coarse-pointer devices (no benefit, mobile GPU hit).
+ * - Skips when user prefers reduced motion.
+ * - Coalesces moves through a single RAF; writes transform directly.
+ * - No CSS custom property writes on :root (was forcing full-viewport bg repaint).
+ */
 export function useMouseParallax(): void {
     useEffect(() => {
-        let raf = 0;
-        let mx = 50;
-        let my = 30;
+        if (typeof window === "undefined") return;
 
-        const onMove = (e: MouseEvent) => {
-            mx = (e.clientX / window.innerWidth) * 100;
-            my = (e.clientY / window.innerHeight) * 100;
-            cancelAnimationFrame(raf);
-            raf = requestAnimationFrame(() => {
-                document.documentElement.style.setProperty("--mx", mx + "%");
-                document.documentElement.style.setProperty("--my", my + "%");
-                const blobs = document.querySelectorAll<HTMLElement>(".blob");
-                blobs.forEach((b, i) => {
-                    const f = (i + 1) * 6;
-                    const dx = ((mx - 50) * f) / 50;
-                    const dy = ((my - 50) * f) / 50;
-                    b.style.transform = `translate(${dx}px, ${dy}px)`;
-                });
-            });
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+        const reduced = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+        if (coarse || reduced) return;
+
+        const blobs = Array.from(
+            document.querySelectorAll<HTMLElement>(".blob")
+        );
+        if (blobs.length === 0) return;
+
+        let raf = 0;
+        let pendingMx = 50;
+        let pendingMy = 30;
+
+        const apply = () => {
+            raf = 0;
+            for (let i = 0; i < blobs.length; i++) {
+                const f = (i + 1) * 6;
+                const dx = ((pendingMx - 50) * f) / 50;
+                const dy = ((pendingMy - 50) * f) / 50;
+                blobs[i].style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+            }
         };
 
-        window.addEventListener("mousemove", onMove);
+        const onMove = (e: MouseEvent) => {
+            pendingMx = (e.clientX / window.innerWidth) * 100;
+            pendingMy = (e.clientY / window.innerHeight) * 100;
+            if (raf === 0) raf = requestAnimationFrame(apply);
+        };
+
+        window.addEventListener("mousemove", onMove, { passive: true });
         return () => {
             window.removeEventListener("mousemove", onMove);
-            cancelAnimationFrame(raf);
+            if (raf) cancelAnimationFrame(raf);
         };
     }, []);
 }

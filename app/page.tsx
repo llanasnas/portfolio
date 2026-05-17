@@ -1,5 +1,9 @@
-import { HomeClient } from "@/components/home_page/HomeClient";
+"use client";
+
+import { useRouter } from "next/navigation";
+import HeroComponent from "@/components/heroSection/HeroComponent";
 
 export default function Home() {
-  return <HomeClient />;
+  const router = useRouter();
+  return <HeroComponent onEnterArchive={() => router.push("/cv")} />;
 }

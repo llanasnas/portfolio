@@ -40,6 +40,8 @@ export function Timeline({
   }, []);
 
   // Mobile: convert horizontal swipe into vertical page scroll
+  // Perf: RAF-coalesced, threshold-gated. Skip preventDefault until horizontal intent confirmed
+  // (lets the browser drive vertical pan natively; we hijack only when user swipes sideways).
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -47,40 +49,67 @@ export function Timeline({
     let startX = 0;
     let startY = 0;
     let scrollStart = 0;
+    let pendingTop = 0;
+    let raf = 0;
     let tracking = false;
+    let claimed = false; // true once gesture confirmed horizontal
+
+    const flush = () => {
+      raf = 0;
+      window.scrollTo(0, pendingTop);
+    };
 
     function onTouchStart(e: TouchEvent) {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       scrollStart = window.scrollY;
+      pendingTop = scrollStart;
       tracking = true;
+      claimed = false;
     }
 
     function onTouchMove(e: TouchEvent) {
       if (!tracking) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
-      // Only intercept clearly horizontal gestures
-      if (Math.abs(dx) < Math.abs(dy) * 0.8) return;
+      const adx = Math.abs(dx);
+      const ady = Math.abs(dy);
+
+      if (!claimed) {
+        // Wait for clear horizontal intent before hijacking
+        if (adx < 8 && ady < 8) return;
+        if (adx < ady * 0.9) {
+          // Vertical-dominant gesture — release and let browser handle
+          tracking = false;
+          return;
+        }
+        claimed = true;
+      }
+
       e.preventDefault();
-      // 1 px swipe ≈ 1.6 px vertical scroll (empirical)
-      window.scrollTo({
-        top: scrollStart - dx * 1.6,
-        behavior: "instant" as ScrollBehavior,
-      });
+      pendingTop = scrollStart - dx * 1.6;
+      if (raf === 0) raf = requestAnimationFrame(flush);
     }
 
     function onTouchEnd() {
       tracking = false;
+      claimed = false;
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
     }
 
     el.addEventListener("touchstart", onTouchStart, { passive: true });
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     el.addEventListener("touchend", onTouchEnd, { passive: true });
+    el.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {
       el.removeEventListener("touchstart", onTouchStart);
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 

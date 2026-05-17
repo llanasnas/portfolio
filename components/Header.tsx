@@ -35,6 +35,7 @@ export function Header() {
 
   const navItems = [
     { label: "About", href: "/about" },
+    { label: "CV", href: "/cv" },
     {
       label: "Projects",
       href: isHome ? "#projects" : "/#projects",
@@ -66,15 +67,11 @@ export function Header() {
             className="flex items-center gap-2.5 group select-none"
             aria-label="Gerard Llanas — Home"
           >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold font-mono text-sm shrink-0 transition-transform duration-300 group-hover:scale-110"
-              style={{
-                background: "var(--grad-level)",
-                boxShadow: "0 0 16px rgba(184,123,255,0.35)",
-              }}
-            >
-              GL
-            </div>
+            <img
+              src="/assets/avatar_portfolio.png"
+              alt="Gerard Llanas Logo"
+              className="w-8 h-8 rounded-lg drop-shadow-[0_0_6px_rgba(184,123,255,0.5)] group-hover:drop-shadow-[0_0_10px_rgba(184,123,255,0.8)] transition-all duration-300"
+            />
             <span className="hidden sm:block font-semibold text-[13px] text-(--fg-1) tracking-wide">
               Gerard Llanas
             </span>

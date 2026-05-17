@@ -101,12 +101,12 @@ export function ContactSection() {
         >
           {/* Info card — legendary gold outline */}
           <aside
-            className="rounded-xl border p-6 h-fit backdrop-blur-md"
+            className="chamfer-md border p-6 h-fit backdrop-blur-md"
             style={{
               background: "rgba(20,24,42,0.7)",
-              borderColor: "rgba(251,191,36,0.35)",
+              borderColor: "rgba(251,191,36,0.32)",
               boxShadow:
-                "0 0 0 1px rgba(251,191,36,0.12), 0 0 40px rgba(251,191,36,0.08), inset 0 1px 0 rgba(251,191,36,0.1)",
+                "0 14px 36px -22px rgba(0,0,0,0.6), 0 0 0 1px rgba(251,191,36,0.10)",
               position: "relative",
               overflow: "hidden",
               color: "var(--fg-1)",
@@ -174,9 +174,10 @@ export function ContactSection() {
                   }}
                 >
                   <span
-                    className="flex items-center justify-center w-8 h-8 rounded-lg shrink-0 text-sm"
+                    className="chamfer-corner flex items-center justify-center w-8 h-8 shrink-0 text-sm border"
                     style={{
-                      background: "rgba(251,191,36,0.1)",
+                      background: "rgba(251,191,36,0.08)",
+                      borderColor: "rgba(251,191,36,0.22)",
                       color: "var(--rarity-legendary)",
                     }}
                   >
@@ -235,15 +236,15 @@ export function ContactSection() {
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className="flex-1 py-2 px-2 rounded font-mono text-[10px] tracking-widest uppercase cursor-pointer transition-all duration-200 border"
+                  className="chamfer-corner flex-1 py-2 px-2 font-mono text-[10px] tracking-widest uppercase cursor-pointer transition-all duration-200 border"
                   style={{
                     background:
                       type === t
-                        ? "rgba(251,191,36,0.12)"
+                        ? "rgba(251,191,36,0.10)"
                         : "rgba(255,255,255,0.03)",
                     borderColor:
                       type === t
-                        ? "rgba(251,191,36,0.45)"
+                        ? "rgba(251,191,36,0.4)"
                         : "var(--glass-stroke)",
                     color:
                       type === t ? "var(--rarity-legendary)" : "var(--fg-3)",
@@ -269,7 +270,7 @@ export function ContactSection() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded text-sm outline-none transition-colors duration-200 border"
+                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     borderColor: "var(--glass-stroke)",
@@ -298,7 +299,7 @@ export function ContactSection() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded text-sm outline-none transition-colors duration-200 border"
+                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     borderColor: "var(--glass-stroke)",
@@ -330,7 +331,7 @@ export function ContactSection() {
                 onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={5}
-                className="w-full px-3.5 py-2.5 rounded text-sm outline-none transition-colors duration-200 border resize-y"
+                className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border resize-y"
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   borderColor: "var(--glass-stroke)",
@@ -352,23 +353,23 @@ export function ContactSection() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2.5 py-3.5 px-7 rounded-lg font-mono text-[11px] font-bold tracking-[0.16em] uppercase cursor-pointer transition-all duration-200 border-none"
+              className="chamfer-sm w-full flex items-center justify-center gap-2.5 py-3.5 px-7 font-mono text-[11px] font-bold tracking-[0.16em] uppercase cursor-pointer transition-all duration-200 border-none"
               style={{
                 background:
                   "linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #fbbf24 100%)",
                 color: "#0a0c14",
                 boxShadow:
-                  "0 0 30px rgba(251,191,36,0.35), 0 4px 20px rgba(251,191,36,0.2)",
+                  "0 0 22px rgba(251,191,36,0.22), 0 4px 16px rgba(0,0,0,0.4)",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
                 e.currentTarget.style.boxShadow =
-                  "0 0 55px rgba(251,191,36,0.55), 0 6px 30px rgba(251,191,36,0.3)";
+                  "0 0 38px rgba(251,191,36,0.4), 0 6px 22px rgba(0,0,0,0.5)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "";
                 e.currentTarget.style.boxShadow =
-                  "0 0 30px rgba(251,191,36,0.35), 0 4px 20px rgba(251,191,36,0.2)";
+                  "0 0 22px rgba(251,191,36,0.22), 0 4px 16px rgba(0,0,0,0.4)";
               }}
             >
               Begin Mission <span className="text-sm">↗</span>

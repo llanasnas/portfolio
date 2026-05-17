@@ -82,7 +82,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const STATS = [
-  { value: 5, suffix: "+", label: "Years coding" },
+  { value: 7, suffix: "+", label: "Years coding" },
   { value: 15, suffix: "+", label: "Projects shipped" },
   { value: 6500, suffix: "+", label: "XP earned" },
   { value: null, suffix: "∞", label: "Coffee consumed" },
@@ -472,10 +472,14 @@ export default function AboutContent() {
           >
             <SplitChars text="Player Profile" />
           </p>
-
+          <img
+            src="/assets/avatar_portfolio.png"
+            alt="Gerard Llanas Logo"
+            className="w-50 h-50 rounded-lg mb-3 mt-3 drop-shadow-[0_0_6px_rgba(184,123,255,0.5)] group-hover:drop-shadow-[0_0_10px_rgba(184,123,255,0.8)] transition-all duration-300 "
+          />
           <h1
             ref={heroTitleRef}
-            className="gl-hero-title text-4xl md:text-6xl lg:text-7xl font-bold mb-5 leading-[1.05]"
+            className="gl-hero-title text-4xl md:text-6xl lg:text-7xl font-bold mb-1 leading-[1.05]"
             style={{
               color: "var(--fg-1)",
               letterSpacing: "-0.02em",

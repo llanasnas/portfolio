@@ -1,0 +1,254 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── expense accordion toggle ─────────────── */
+.expenseToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(90, 215, 255, 0.04);
+  border: 1px solid rgba(90, 215, 255, 0.18);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-cyan);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  /* min touch target */
+  min-height: 40px;
+}
+.expenseToggle:hover {
+  background: rgba(90, 215, 255, 0.08);
+  border-color: rgba(90, 215, 255, 0.32);
+}
+.expenseToggleIcon {
+  font-size: 9px;
+  opacity: 0.7;
+}
+.expenseToggleBadge {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--fg-4);
+  letter-spacing: 0.05em;
+}
+
+/* ── intro bar ────────────────────────────── */
+.intro {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.intro strong {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+/* ── Steps row (AlgorithmSteps + info button) ─ */
+.stepsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Info button ──────────────────────────────── */
+.infoBtn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(90, 215, 255, 0.35);
+  background: rgba(90, 215, 255, 0.06);
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  line-height: 1;
+}
+.infoBtn:hover {
+  background: rgba(90, 215, 255, 0.14);
+  border-color: rgba(90, 215, 255, 0.7);
+  box-shadow: 0 0 10px rgba(90, 215, 255, 0.25);
+}
+
+/* ── Modal overlay ────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 8, 16, 0.82);
+  backdrop-filter: blur(6px);
+  padding: 16px;
+}
+
+.modal {
+  background: rgba(10, 14, 28, 0.97);
+  border: 1px solid rgba(90, 215, 255, 0.22);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(90, 215, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(90, 215, 255, 0.08);
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid rgba(90, 215, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modalTag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--accent-cyan);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.modalTitle {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg-1);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.modalClose {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--fg-3);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.modalClose:hover {
+  background: rgba(255, 80, 80, 0.12);
+  border-color: rgba(255, 80, 80, 0.4);
+  color: #ff5050;
+}
+
+.modalBody {
+  overflow-y: auto;
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 215, 255, 0.2) transparent;
+}
+
+.modalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalSectionTitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.modalSection p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  margin: 0;
+}
+
+.modalSection p strong {
+  color: var(--fg-1);
+}
+
+.modalList {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--fg-2);
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modalList li {
+  padding-left: 14px;
+  position: relative;
+}
+
+.modalList li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent-cyan);
+  opacity: 0.6;
+}
+
+.modalList strong {
+  color: var(--fg-1);
+}
+
+/* ── mobile ───────────────────────────────── */
+@media (max-width: 640px) {
+  .root {
+    gap: 10px;
+  }
+  .expenseToggle {
+    font-size: 12px;
+    padding: 10px 14px;
+  }
+  .intro {
+    font-size: 11px;
+  }
+}

@@ -757,18 +757,12 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--slot-bg, rgba(255, 255, 255, 0.025));
-  border: 1px solid var(--slot-stroke, rgba(255, 255, 255, 0.10));
+  border: 1px solid var(--slot-stroke, rgba(255, 255, 255, 0.1));
   transition:
     border-color 200ms var(--ease-out),
     background 200ms var(--ease-out);
   animation: slot-in 380ms var(--ease-out) backwards;
-  clip-path: polygon(
-    0 0,
-    calc(100% - 4px) 0,
-    100% 4px,
-    100% 100%,
-    0 100%
-  );
+  clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%);
 }
 .hud-slot:hover {
   background: var(--slot-bg-hover, rgba(255, 255, 255, 0.05));
@@ -795,18 +789,18 @@ body {
 .hud-slot.rarity-common {
   --slot-bg: rgba(255, 255, 255, 0.025);
   --slot-bg-hover: rgba(255, 255, 255, 0.05);
-  --slot-stroke: rgba(255, 255, 255, 0.10);
+  --slot-stroke: rgba(255, 255, 255, 0.1);
   --slot-stroke-hover: rgba(255, 255, 255, 0.22);
 }
 .hud-slot.rarity-rare {
-  --slot-bg: rgba(90, 215, 255, 0.10);
+  --slot-bg: rgba(90, 215, 255, 0.1);
   --slot-bg-hover: rgba(90, 215, 255, 0.18);
   --slot-stroke: rgba(90, 215, 255, 0.32);
   --slot-stroke-hover: rgba(90, 215, 255, 0.6);
 }
 .hud-slot.rarity-epic {
   --slot-bg: rgba(184, 123, 255, 0.12);
-  --slot-bg-hover: rgba(184, 123, 255, 0.20);
+  --slot-bg-hover: rgba(184, 123, 255, 0.2);
   --slot-stroke: rgba(184, 123, 255, 0.38);
   --slot-stroke-hover: rgba(184, 123, 255, 0.7);
 }
@@ -2304,16 +2298,10 @@ body {
   text-transform: uppercase;
   cursor: pointer;
   transition: all 200ms var(--ease-out);
-  clip-path: polygon(
-    0 0,
-    calc(100% - 5px) 0,
-    100% 5px,
-    100% 100%,
-    0 100%
-  );
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
 }
 .form-type-tab.is-active {
-  background: rgba(90, 215, 255, 0.10);
+  background: rgba(90, 215, 255, 0.1);
   border-color: rgba(90, 215, 255, 0.4);
   color: var(--accent-cyan);
 }
@@ -2685,4 +2673,52 @@ button.rail-node {
 button.rail-node:focus-visible {
   outline: 2px solid var(--accent-cyan);
   outline-offset: 3px;
+}
+
+/* ================================================================
+ * SYSTEM SIMULATIONS â€” scoped tokens + utilities
+ * Active only when [data-zone="simulations"] is set on a layout.
+ * Does NOT bleed into /, /cv, /about.
+ * ================================================================ */
+[data-zone="simulations"] {
+  --neon-pink: #ff2dcf;
+  --neon-lime: #b5ff5a;
+  --neon-cyan: #5ad7ff;
+  --neon-violet: #b87bff;
+  --grad-cyber: linear-gradient(
+    135deg,
+    var(--neon-pink) 0%,
+    var(--neon-cyan) 100%
+  );
+  --grad-phase: linear-gradient(
+    90deg,
+    var(--accent-cyan),
+    var(--accent-violet)
+  );
+  --glow-protocol:
+    0 0 0 1px rgba(90, 215, 255, 0.45), 0 0 20px rgba(90, 215, 255, 0.3),
+    0 0 60px rgba(184, 123, 255, 0.18);
+  --glow-locked:
+    0 0 0 1px rgba(138, 144, 173, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.5);
+  --transition-protocol: cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--fg-1);
+  background: var(--bg-0);
+  min-height: 100vh;
+}
+
+[data-zone="simulations"] .codename {
+  font-family: var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[data-zone="simulations"] .classified {
+  color: var(--fg-4);
+  filter: blur(2px);
+  user-select: none;
+}
+
+[data-zone="simulations"] ::selection {
+  background: rgba(90, 215, 255, 0.25);
+  color: var(--fg-1);
 }

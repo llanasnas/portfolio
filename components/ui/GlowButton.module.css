@@ -1,0 +1,103 @@
+.btn {
+  --btn-color: var(--accent-cyan);
+  --btn-glow: rgba(90, 215, 255, 0.35);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(90, 215, 255, 0.08) 0%,
+    rgba(10, 12, 20, 0.6) 100%
+  );
+  border: 1px solid var(--btn-color);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--fg-1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 220ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+    background 220ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  box-shadow:
+    0 0 0 1px var(--btn-glow) inset,
+    0 0 18px var(--btn-glow),
+    0 6px 18px rgba(0, 0, 0, 0.4);
+  user-select: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(
+    180deg,
+    rgba(90, 215, 255, 0.14) 0%,
+    rgba(10, 12, 20, 0.6) 100%
+  );
+  box-shadow:
+    0 0 0 1px var(--btn-glow) inset,
+    0 0 28px var(--btn-glow),
+    0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--btn-color),
+    transparent
+  );
+  opacity: 0;
+  mix-blend-mode: overlay;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+.btn:hover:not(:disabled)::before {
+  opacity: 0.35;
+}
+
+.primary {
+  --btn-color: var(--accent-cyan);
+  --btn-glow: rgba(90, 215, 255, 0.4);
+}
+
+.ghost {
+  --btn-color: rgba(138, 144, 173, 0.45);
+  --btn-glow: rgba(138, 144, 173, 0.2);
+  background: transparent;
+  color: var(--fg-2);
+}
+
+.danger {
+  --btn-color: #f87171;
+  --btn-glow: rgba(248, 113, 113, 0.4);
+}
+
+.sizeLg {
+  padding: 16px 28px;
+  font-size: 13px;
+}
+
+.sizeSm {
+  padding: 8px 14px;
+  font-size: 11px;
+}

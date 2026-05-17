@@ -1,0 +1,81 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 80% at 20% 10%,
+      rgba(106, 166, 255, 0.12) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      45% 55% at 90% 80%,
+      rgba(184, 123, 255, 0.1) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      80% 50% at 50% 110%,
+      rgba(90, 215, 255, 0.06) 0%,
+      transparent 70%
+    ),
+    var(--bg-0, #05060a);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(90, 215, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 215, 255, 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.4) 60%,
+    transparent 100%
+  );
+}
+
+.gridShift {
+  animation: shift 22s linear infinite;
+  will-change: background-position;
+}
+
+@keyframes shift {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 40px 40px, 40px 40px;
+  }
+}
+
+.glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(184, 123, 255, 0.06) 0%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  animation: pulse 12s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gridShift,
+  .glow {
+    animation: none;
+  }
+}

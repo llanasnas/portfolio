@@ -1,0 +1,311 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: rgba(8, 10, 20, 0.6);
+  border: 1px solid rgba(90, 215, 255, 0.12);
+  border-radius: var(--radius-md, 10px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(90, 215, 255, 0.1);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.headerTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.resetBtn {
+  background: none;
+  border: 1px solid rgba(106, 166, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4);
+  cursor: pointer;
+  transition:
+    border-color 150ms,
+    color 150ms;
+}
+
+.resetBtn:hover {
+  border-color: rgba(90, 215, 255, 0.4);
+  color: var(--fg-2);
+}
+
+.editorWrap {
+  flex: 1 1 0;
+  min-height: 260px;
+  max-height: 460px;
+  overflow: auto;
+  border-bottom: 1px solid rgba(90, 215, 255, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 215, 255, 0.15) transparent;
+  background: rgba(4, 6, 14, 0.7);
+  /* line number gutter via counter */
+  counter-reset: line;
+}
+
+.editorWrap::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.editorWrap::-webkit-scrollbar-thumb {
+  background: rgba(90, 215, 255, 0.15);
+  border-radius: 2px;
+}
+
+.editorInner {
+  min-width: 100%;
+  display: inline-block;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+  background: transparent !important;
+  caret-color: var(--accent-cyan);
+}
+
+.editorTextarea {
+  outline: none !important;
+  background: transparent !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+  color: transparent !important;
+  caret-color: var(--accent-cyan) !important;
+  tab-size: 2;
+}
+
+.editorTextarea::selection {
+  background: rgba(90, 215, 255, 0.18) !important;
+}
+
+.editorPre {
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  line-height: 1.7 !important;
+  color: var(--fg-2);
+  white-space: pre !important;
+  overflow: visible !important;
+}
+
+.runBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(90, 215, 255, 0.08);
+  border-bottom: 1px solid rgba(90, 215, 255, 0.08);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color 150ms;
+}
+
+.clearBtn:hover {
+  color: var(--fg-2);
+}
+
+.result {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-3);
+  margin-left: auto;
+}
+
+.result strong {
+  color: var(--accent-cyan);
+}
+
+.efficiency {
+  color: var(--fg-3);
+}
+
+.efficiencyPerfect {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.console {
+  flex: 0 0 auto;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 215, 255, 0.15) transparent;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.console::-webkit-scrollbar {
+  width: 4px;
+}
+.console::-webkit-scrollbar-thumb {
+  background: rgba(90, 215, 255, 0.15);
+  border-radius: 2px;
+}
+
+.consolePlaceholder {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-4);
+  opacity: 0.5;
+}
+
+.logLine {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.logPrompt {
+  color: var(--accent-cyan);
+  opacity: 0.5;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.logText {
+  color: var(--fg-2);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.logLine_warn .logText {
+  color: #f59e0b;
+}
+
+.logLine_error .logText {
+  color: #f87171;
+}
+
+/* ── Anti-paste alarm overlay ──────────────────────── */
+@keyframes alarmPulse {
+  0%,100% { background-color: rgba(150, 0, 0, 0.93); }
+  50%     { background-color: rgba(240, 20, 20, 0.98); }
+}
+
+@keyframes imgShake {
+  0%,100% { transform: rotate(0deg) scale(1); }
+  15%     { transform: rotate(-5deg) scale(1.06); }
+  30%     { transform: rotate(5deg) scale(1.06); }
+  45%     { transform: rotate(-4deg) scale(1.03); }
+  60%     { transform: rotate(4deg) scale(1.03); }
+  75%     { transform: rotate(-2deg) scale(1.01); }
+}
+
+@keyframes textFlash {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.4; }
+}
+
+.alarmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(200, 0, 0, 0.95);
+  animation: alarmPulse 0.35s infinite;
+  cursor: pointer;
+}
+
+.alarmOverlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.14) 0px,
+    rgba(0, 0, 0, 0.14) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  pointer-events: none;
+}
+
+.alarmContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.alarmImg {
+  width: min(300px, 65vw);
+  height: auto;
+  border-radius: 14px;
+  animation: imgShake 0.35s infinite;
+  filter: drop-shadow(0 0 24px rgba(255, 80, 80, 0.9));
+}
+
+.alarmTitle {
+  font-family: var(--font-mono);
+  font-size: clamp(22px, 5vw, 38px);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow:
+    0 0 20px rgba(255, 255, 255, 0.9),
+    0 0 50px rgba(255, 100, 100, 1);
+  animation: textFlash 0.35s infinite;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.alarmSub {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 2.5vw, 18px);
+  color: rgba(255, 215, 215, 0.95);
+  letter-spacing: 0.07em;
+  margin: 0;
+}
+
+.alarmDismiss {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 200, 200, 0.55);
+  letter-spacing: 0.18em;
+  margin-top: 4px;
+  margin-bottom: 0;
+  animation: textFlash 1.2s infinite;
+}

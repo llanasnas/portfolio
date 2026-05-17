@@ -1,0 +1,37 @@
+.line {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--fg-2);
+  letter-spacing: 0.02em;
+  display: block;
+  white-space: pre-wrap;
+}
+
+.prefix {
+  color: var(--accent-cyan);
+  margin-right: 6px;
+  opacity: 0.85;
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  background: var(--accent-cyan);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: blink 0.9s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+  }
+}

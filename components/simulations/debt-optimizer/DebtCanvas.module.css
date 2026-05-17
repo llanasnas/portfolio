@@ -1,0 +1,325 @@
+.canvasWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.4 / 1;
+  max-height: 560px;
+  min-height: 380px;
+  border: 1px solid rgba(106, 166, 255, 0.15);
+  border-radius: var(--radius-md, 10px);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(106, 166, 255, 0.06) 0%,
+      transparent 70%
+    ),
+    rgba(10, 12, 20, 0.5);
+  overflow: hidden;
+}
+
+.canvasWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(90, 215, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 215, 255, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: default;
+}
+
+.node {
+  cursor: pointer;
+  transition: filter 200ms ease;
+}
+
+.node:hover .nodeRing {
+  filter: drop-shadow(0 0 8px rgba(90, 215, 255, 0.8));
+}
+
+.nodeRing {
+  fill: rgba(15, 18, 32, 0.9);
+  stroke: rgba(106, 166, 255, 0.6);
+  stroke-width: 1.5;
+  transition: stroke 200ms ease;
+}
+
+.nodeRingTarget {
+  stroke: var(--accent-cyan);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 10px rgba(90, 215, 255, 0.9));
+  animation: targetPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes targetPulse {
+  0%,
+  100% {
+    stroke-opacity: 0.7;
+  }
+  50% {
+    stroke-opacity: 1;
+  }
+}
+
+.nodeCenter {
+  fill: var(--accent-cyan);
+  filter: drop-shadow(0 0 6px rgba(90, 215, 255, 0.6));
+}
+
+.nodeCreditor .nodeCenter {
+  fill: var(--success);
+  filter: drop-shadow(0 0 6px var(--success-glow));
+}
+
+.nodeDebtor .nodeCenter {
+  fill: var(--danger);
+  filter: drop-shadow(0 0 6px var(--danger-glow));
+}
+
+.nodeLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  fill: var(--fg-1);
+  text-anchor: middle;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.nodeBalance {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  fill: var(--fg-3);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.transferPath {
+  fill: none;
+  stroke: rgba(184, 123, 255, 0.45);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  cursor: pointer;
+  transition:
+    stroke 200ms ease,
+    stroke-width 200ms ease;
+  stroke-dasharray: 4 6;
+  animation: flow 1.4s linear infinite;
+}
+
+.transferPathHi {
+  stroke: var(--accent-cyan);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px rgba(90, 215, 255, 0.7));
+}
+
+.transferPathOptimal {
+  stroke: var(--success);
+  stroke-width: 2.2;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 8px var(--success-glow));
+  animation: none;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transferPath {
+    animation: none;
+  }
+}
+
+.transferHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 16;
+  cursor: pointer;
+}
+
+.transferAmount {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--fg-2);
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(5, 6, 10, 0.85);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--fg-3);
+  background: rgba(10, 12, 20, 0.7);
+  border: 1px solid rgba(106, 166, 255, 0.12);
+  padding: 6px 10px;
+  border-radius: var(--radius-xs, 4px);
+  backdrop-filter: blur(8px);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.helper {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--accent-cyan);
+  background: rgba(10, 12, 20, 0.7);
+  border: 1px solid rgba(90, 215, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: var(--radius-xs, 4px);
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  max-width: 240px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.transferPathDimmed {
+  opacity: 0.15;
+}
+
+.actions {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.addForm {
+  position: absolute;
+  bottom: 52px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(8, 10, 20, 0.92);
+  border: 1px solid rgba(90, 215, 255, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  backdrop-filter: blur(12px);
+  flex-wrap: wrap;
+  max-width: 320px;
+}
+
+.addFormLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4);
+  letter-spacing: 0.08em;
+}
+
+.addSelect {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(90, 215, 255, 0.2);
+  border-radius: 4px;
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.addSelect:focus {
+  border-color: rgba(90, 215, 255, 0.5);
+}
+
+.addInput {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(90, 215, 255, 0.2);
+  border-radius: 4px;
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  outline: none;
+  width: 80px;
+}
+
+.addInput:focus {
+  border-color: rgba(90, 215, 255, 0.5);
+}
+
+.delete {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+}
+
+/* ── Mobile ──────────────────────────────────── */
+@media (max-width: 640px) {
+  /* More square ratio so height isn't wasted */
+  .canvasWrap {
+    aspect-ratio: 1.05 / 1;
+    min-height: 300px;
+    max-height: 420px;
+  }
+
+  /* Scale up the SVG — overflow:hidden clips edges, nodes stay visible */
+  .svg {
+    transform: scale(1.18);
+    transform-origin: center center;
+  }
+
+  /* Hide helper hint — not needed on touch */
+  .helper {
+    display: none;
+  }
+
+  /* Hide legend — clutter on small screens */
+  .legend {
+    display: none;
+  }
+
+  /* Compact action buttons at the bottom */
+  .actions {
+    bottom: 6px;
+    right: 6px;
+    left: 6px;
+    justify-content: center;
+  }
+
+  /* Reduce add form width on mobile */
+  .addForm {
+    bottom: 46px;
+    left: 6px;
+    right: 6px;
+    max-width: unset;
+  }
+}

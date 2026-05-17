@@ -1,0 +1,125 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 240px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4);
+  letter-spacing: 0.14em;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 12px;
+  background: rgba(15, 18, 32, 0.5);
+  border: 1px solid rgba(106, 166, 255, 0.08);
+  border-radius: var(--radius-xs, 4px);
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.row:hover {
+  background: rgba(15, 18, 32, 0.75);
+  border-color: rgba(106, 166, 255, 0.2);
+}
+
+.rowTop {
+  border-color: rgba(90, 215, 255, 0.3);
+  background: linear-gradient(
+    90deg,
+    rgba(90, 215, 255, 0.1) 0%,
+    rgba(15, 18, 32, 0.5) 100%
+  );
+  box-shadow: 0 0 16px rgba(90, 215, 255, 0.12);
+}
+
+.rowFresh {
+  animation: enter 320ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.rank {
+  font-weight: 600;
+  color: var(--accent-cyan);
+  letter-spacing: 0.1em;
+  text-align: right;
+}
+
+.rowTop .rank {
+  color: var(--accent-violet);
+  font-size: 13px;
+}
+
+.nick {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  color: var(--accent-cyan);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.time {
+  color: var(--fg-4);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.empty {
+  padding: 32px 12px;
+  text-align: center;
+  color: var(--fg-4);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.error {
+  padding: 12px;
+  text-align: center;
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}

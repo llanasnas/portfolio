@@ -1,0 +1,176 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(90, 215, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+}
+
+.headerCount {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 215, 255, 0.2) transparent;
+}
+
+.list::-webkit-scrollbar {
+  width: 4px;
+}
+.list::-webkit-scrollbar-thumb {
+  background: rgba(90, 215, 255, 0.2);
+  border-radius: 2px;
+}
+
+.item {
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(106, 166, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.item:hover {
+  background: rgba(90, 215, 255, 0.05);
+  border-color: rgba(90, 215, 255, 0.25);
+}
+
+.itemSelected {
+  background: rgba(90, 215, 255, 0.08);
+  border-color: rgba(90, 215, 255, 0.5);
+  box-shadow: 0 0 12px rgba(90, 215, 255, 0.12);
+}
+
+.itemTop {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.itemId {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-4);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  background: rgba(90, 215, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.itemName {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-2);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemAmount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payerTag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-3);
+}
+
+.payerDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-violet);
+  flex-shrink: 0;
+}
+
+.txBadge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent-violet);
+  background: rgba(184, 123, 255, 0.1);
+  border: 1px solid rgba(184, 123, 255, 0.2);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.beneficiaries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.beneficiary {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.beneficiaryName {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-3);
+  letter-spacing: 0.06em;
+}
+
+.beneficiaryOwes {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--fg-4);
+}

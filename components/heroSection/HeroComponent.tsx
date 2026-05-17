@@ -20,78 +20,21 @@
  *      recommended — see the layout.tsx snippet at the bottom).
  */
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./HeroComponent.module.css";
+import HoloSocials from "./HoloSocials";
+import HeroMobile from "./HeroMobile";
+import { CODE_LINES, stripHtml, renderPartial } from "@/lib/heroCode";
 
 interface HeroComponentProps {
-  /** Called when the laptop folder or the tablet code surface is activated. */
+  /** @deprecated Use onEnterLaptop + onEnterTablet. Fallback for both if specific props omitted. */
   onEnterArchive?: () => void;
+  /** Called when the laptop folder is activated (CV / archive). */
+  onEnterLaptop?: () => void;
+  /** Called when the tablet code surface is activated (SYSTEM SIMULATIONS). */
+  onEnterTablet?: () => void;
   /** Override the room background image (public/ relative). Default: /assets/room.png */
   photoSrc?: string;
-}
-
-/* ============================================================
- * CODE LINES — typed onto the tablet
- * ============================================================ */
-const CODE_LINES: { html: string }[] = [
-  { html: '<span class="com">// pair_program.ts</span>' },
-  {
-    html: '<span class="kw">import</span> <span class="pl">{ gerard }</span> <span class="kw">from</span> <span class="str">"@portfolio"</span><span class="pn">;</span>',
-  },
-  { html: "" },
-  {
-    html: '<span class="kw">await</span> <span class="pl">gerard</span><span class="pn">.</span><span class="fn">collaborate</span><span class="pn">({</span>',
-  },
-  {
-    html: '  <span class="pl">with</span><span class="pn">:</span> <span class="str">"you"</span><span class="pn">,</span>',
-  },
-  {
-    html: '  <span class="pl">on</span><span class="pn">:</span> <span class="str">"the future"</span><span class="pn">,</span>',
-  },
-  {
-    html: '  <span class="pl">stack</span><span class="pn">:</span> <span class="pn">[</span><span class="str">"react"</span><span class="pn">,</span> <span class="str">"ai"</span><span class="pn">],</span>',
-  },
-  { html: '<span class="pn">});</span>' },
-  { html: "" },
-  {
-    html: '<span class="com">→ shipping <span class="num">∞</span> ideas</span>',
-  },
-];
-
-function stripHtml(html: string): string {
-  if (typeof document === "undefined") return html.replace(/<[^>]+>/g, "");
-  const d = document.createElement("div");
-  d.innerHTML = html;
-  return d.textContent || "";
-}
-
-function renderPartial(html: string, n: number): string {
-  if (!html) return "";
-  let out = "";
-  let count = 0;
-  let i = 0;
-  while (i < html.length && count < n) {
-    if (html[i] === "<") {
-      const end = html.indexOf(">", i);
-      if (end === -1) break;
-      out += html.slice(i, end + 1);
-      i = end + 1;
-    } else {
-      out += html[i];
-      count++;
-      i++;
-    }
-  }
-  const opens = [...out.matchAll(/<(\w+)[^>]*>/g)].map((m) => m[1]);
-  const closes = [...out.matchAll(/<\/(\w+)>/g)].map((m) => m[1]);
-  const stack: string[] = [];
-  opens.forEach((o) => stack.push(o));
-  closes.forEach((c) => {
-    const idx = stack.lastIndexOf(c);
-    if (idx >= 0) stack.splice(idx, 1);
-  });
-  while (stack.length) out += `</${stack.pop()}>`;
-  return out;
 }
 
 /* ============================================================
@@ -288,8 +231,10 @@ function LaptopFolder({ onActivate }: { onActivate: () => void }) {
             <path d="M 76 22 L 94 22 L 94 30 Z" fill="rgba(106,166,255,0.18)" />
           </svg>
         </div>
-        <div className={styles.laptopFolderLabel}>See my expedient</div>
-        <div className={styles.laptopFolderSub}>Career Log ⟶</div>
+      </div>
+      <div className={styles.laptopTooltip} aria-hidden="true">
+        <span className={styles.tipLine1}>&gt; expediente.sys</span>
+        <span className={styles.tipLine2}>&gt; decrypt &amp; open...</span>
       </div>
     </div>
   );
@@ -300,9 +245,12 @@ function LaptopFolder({ onActivate }: { onActivate: () => void }) {
  * ============================================================ */
 export default function HeroComponent({
   onEnterArchive,
+  onEnterLaptop,
+  onEnterTablet,
   photoSrc = "/assets/room.png",
 }: HeroComponentProps) {
   const [time, setTime] = useState<Date | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Defer the clock until mount so SSR doesn't mismatch.
   useEffect(() => {
@@ -311,28 +259,59 @@ export default function HeroComponent({
     return () => clearInterval(t);
   }, []);
 
-  const enterArchive = useCallback(() => {
-    if (onEnterArchive) {
-      onEnterArchive();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 760px)");
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+
+  const enterLaptop = useCallback(() => {
+    const fn = onEnterLaptop ?? onEnterArchive;
+    if (fn) {
+      fn();
     } else {
-      // fallback — replace with router.push("/career") in your page.
-      // eslint-disable-next-line no-console
-      console.info("[Hero] onEnterArchive not provided — wire to your router.");
+      console.info("[Hero] onEnterLaptop not provided — wire to your router.");
     }
-  }, [onEnterArchive]);
+  }, [onEnterLaptop, onEnterArchive]);
+
+  const enterTablet = useCallback(() => {
+    const fn = onEnterTablet ?? onEnterArchive;
+    if (fn) {
+      fn();
+    } else {
+      console.info("[Hero] onEnterTablet not provided — wire to your router.");
+    }
+  }, [onEnterTablet, onEnterArchive]);
 
   const hh = time ? String(time.getHours()).padStart(2, "0") : "--";
   const mm = time ? String(time.getMinutes()).padStart(2, "0") : "--";
 
+  if (isMobile) {
+    return (
+      <HeroMobile
+        onEnterArchive={enterLaptop}
+        onEnterSimulations={enterTablet}
+      />
+    );
+  }
+
   return (
     <div className={styles.hero} data-screen-label="01 Workspace Hero">
+      <div className={styles.dust} aria-hidden="true">
+        <span /><span /><span /><span /><span />
+        <span /><span /><span /><span /><span />
+      </div>
       <div className={styles.stage}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className={styles.stagePhoto} src={photoSrc} alt="" />
         <div className={styles.stageVignette} />
 
-        <LaptopFolder onActivate={enterArchive} />
-        <TabletSurface onActivate={enterArchive} />
+        <LaptopFolder onActivate={enterLaptop} />
+        <TabletSurface onActivate={enterTablet} />
+        <HoloSocials />
       </div>
 
       <div className={`${styles.mark} ${styles.tl}`}>

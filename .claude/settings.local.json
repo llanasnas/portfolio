@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\gerar\\\\Documents\\\\Proyectos\\\\portfolio\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(npm i *)",
+      "Bash(powershell *)",
+      "Bash(Select-String -Pattern \"simulations|api/leader|lib/db|ui/\\(Holo|Scan|Terminal|Glow\\)|portfolio\\\\\\\\app\\\\\\\\globals|✖\")",
+      "PowerShell(npm run *)"
     ]
   }
 }

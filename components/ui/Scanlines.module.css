@@ -1,0 +1,53 @@
+.root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(90, 215, 255, 0.04) 0,
+    rgba(90, 215, 255, 0.04) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.fixed {
+  position: fixed;
+}
+
+.sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(90, 215, 255, 0.06) 40%,
+    rgba(184, 123, 255, 0.05) 60%,
+    transparent 100%
+  );
+  animation: sweep 9s linear infinite;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(120vh);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep::after {
+    animation: none;
+    opacity: 0;
+  }
+}

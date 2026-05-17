@@ -1,0 +1,77 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.statTile {
+  padding: 10px 12px;
+  border: 1px solid rgba(106, 166, 255, 0.12);
+  background: rgba(15, 18, 32, 0.5);
+  border-radius: var(--radius-xs, 4px);
+}
+
+.statLabel {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+  margin-bottom: 4px;
+}
+
+.statValue {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.statValueWin {
+  color: var(--success);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.seedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-4);
+  padding: 6px 10px;
+  border: 1px solid rgba(106, 166, 255, 0.12);
+  border-radius: var(--radius-xs, 4px);
+  background: rgba(15, 18, 32, 0.5);
+  margin-left: auto;
+}
+
+.seedBadge strong {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .seedBadge {
+    margin-left: 0;
+  }
+}

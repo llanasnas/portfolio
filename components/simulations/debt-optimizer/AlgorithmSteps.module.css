@@ -1,0 +1,151 @@
+.root {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 4px;
+}
+
+/* ── step card ──────────────────────── */
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 7px 10px;
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.done .step {
+  background: rgba(90, 215, 255, 0.06);
+  border-color: rgba(90, 215, 255, 0.28);
+  box-shadow: 0 0 10px rgba(90, 215, 255, 0.07);
+}
+
+/* step 05 — challenge — violet accent */
+.step.challenge {
+  border-color: rgba(167, 117, 255, 0.18);
+  background: rgba(167, 117, 255, 0.04);
+}
+.done .step.challenge {
+  border-color: rgba(167, 117, 255, 0.42);
+  background: rgba(167, 117, 255, 0.1);
+  box-shadow: 0 0 12px rgba(167, 117, 255, 0.12);
+}
+
+/* ── number ─────────────────────────── */
+.num {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.08);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.35s ease;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.done .step:not(.challenge) .num {
+  color: rgba(90, 215, 255, 0.7);
+}
+.done .step.challenge .num {
+  color: rgba(167, 117, 255, 0.85);
+}
+
+/* ── label + sub ─────────────────────── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fg-4);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.35s ease;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.done .step:not(.challenge) .label {
+  color: var(--fg-1);
+}
+.done .step.challenge .label {
+  color: rgba(200, 170, 255, 0.9);
+}
+
+.sub {
+  font-size: 9px;
+  color: var(--fg-4);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.6;
+}
+
+.step.challenge .sub {
+  color: rgba(167, 117, 255, 0.7);
+  opacity: 1;
+}
+
+/* ── connector arrow ─────────────────── */
+.arrow {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.06);
+  transition: color 0.35s ease;
+  padding: 0 1px;
+}
+
+.done .arrow {
+  color: rgba(90, 215, 255, 0.25);
+}
+
+/* ── mobile ──────────────────────────── */
+@media (max-width: 640px) {
+  .root {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .item {
+    flex: 1 1 calc(50% - 12px);
+    min-width: calc(50% - 12px);
+  }
+
+  .arrow {
+    display: none;
+  }
+
+  .num {
+    font-size: 13px;
+  }
+
+  .label {
+    font-size: 9px;
+  }
+}

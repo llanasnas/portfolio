@@ -1,0 +1,94 @@
+.root {
+  position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(106, 166, 255, 0.05) 0%,
+      rgba(15, 18, 32, 0.65) 100%
+    ),
+    rgba(10, 12, 20, 0.4);
+  border: 1px solid rgba(106, 166, 255, 0.18);
+  border-radius: var(--radius-md, 10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 18px;
+  color: var(--fg-1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 18px 40px -16px rgba(0, 0, 0, 0.55);
+}
+
+.rare {
+  border-color: rgba(90, 215, 255, 0.35);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px rgba(90, 215, 255, 0.12) inset,
+    0 18px 40px -16px rgba(0, 0, 0, 0.55),
+    0 0 24px rgba(90, 215, 255, 0.18);
+}
+
+.epic {
+  border-color: rgba(184, 123, 255, 0.4);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 0 1px rgba(184, 123, 255, 0.14) inset,
+    0 18px 40px -16px rgba(0, 0, 0, 0.55),
+    0 0 26px rgba(184, 123, 255, 0.22);
+}
+
+.locked {
+  border-color: rgba(138, 144, 173, 0.18);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(138, 144, 173, 0.03) 0%,
+      rgba(10, 12, 20, 0.7) 100%
+    );
+  filter: saturate(0.4);
+}
+
+/* Corner ticks */
+.ticks::before,
+.ticks::after,
+.ticksInner::before,
+.ticksInner::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid currentColor;
+  color: rgba(90, 215, 255, 0.55);
+  pointer-events: none;
+}
+.ticks::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.ticks::after {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+}
+.ticksInner::before {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
+}
+.ticksInner::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.epic .ticks::before,
+.epic .ticks::after,
+.epic .ticksInner::before,
+.epic .ticksInner::after {
+  color: rgba(184, 123, 255, 0.65);
+}

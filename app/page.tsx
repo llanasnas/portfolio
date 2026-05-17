@@ -5,5 +5,10 @@ import HeroComponent from "@/components/heroSection/HeroComponent";
 
 export default function Home() {
   const router = useRouter();
-  return <HeroComponent onEnterArchive={() => router.push("/cv")} />;
+  return (
+    <HeroComponent
+      onEnterLaptop={() => router.push("/cv")}
+      onEnterTablet={() => router.push("/simulations")}
+    />
+  );
 }

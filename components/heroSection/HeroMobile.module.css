@@ -1,0 +1,827 @@
+/* HeroMobile.module.css — cyberpunk mobile hero, 3 paneles ScrollTrigger */
+
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--fg-2, #c8cde6);
+  background-color: #03040c;
+  background-image:
+    linear-gradient(rgba(90, 215, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 215, 255, 0.04) 1px, transparent 1px),
+    radial-gradient(
+      ellipse 80% 55% at 50% 100%,
+      rgba(184, 123, 255, 0.18) 0%,
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 40% 40% at 10% 100%,
+      rgba(90, 215, 255, 0.12) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 40% 40% at 90% 100%,
+      rgba(90, 215, 255, 0.1) 0%,
+      transparent 60%
+    ),
+    linear-gradient(180deg, #03040c 0%, #060818 60%, #080b1a 100%);
+  background-size:
+    40px 40px,
+    40px 40px,
+    auto,
+    auto,
+    auto,
+    auto;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 30;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-3, #8a90ad);
+  pointer-events: none;
+}
+.topbar .live {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success, #4ade80);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+  animation: livePulse 2.4s ease-in-out infinite;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+.clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3, #8a90ad);
+}
+.clock span {
+  color: var(--fg-4, #5a6082);
+  margin-left: 4px;
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 60px;
+  isolation: isolate;
+}
+
+/* ---------- Panel 1 — Identity ---------- */
+.identity {
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+}
+.avatar {
+  width: clamp(140px, 42vw, 200px);
+  aspect-ratio: 1;
+  position: relative;
+}
+.avatar svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(106, 166, 255, 0.4));
+  z-index: 4;
+  pointer-events: none;
+}
+.avatarHex {
+  fill: rgba(10, 12, 20, 0.32);
+  stroke: rgba(106, 166, 255, 0.65);
+  stroke-width: 1;
+}
+.avatarTick {
+  stroke: rgba(168, 200, 255, 0.7);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+}
+.avatarPhoto {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  object-fit: cover;
+  clip-path: polygon(50% 4%, 88% 26%, 88% 74%, 50% 96%, 12% 74%, 12% 26%);
+  filter: grayscale(0.35) contrast(1.08) brightness(0.92) saturate(0.85);
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.avatarTint {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  clip-path: polygon(50% 4%, 88% 26%, 88% 74%, 50% 96%, 12% 74%, 12% 26%);
+  background: linear-gradient(
+    135deg,
+    rgba(90, 215, 255, 0.28) 0%,
+    rgba(106, 166, 255, 0.22) 50%,
+    rgba(184, 123, 255, 0.34) 100%
+  );
+  mix-blend-mode: color;
+  z-index: 2;
+  pointer-events: none;
+}
+.avatarScan {
+  position: absolute;
+  inset: 6%;
+  width: 88%;
+  height: 88%;
+  clip-path: polygon(50% 4%, 88% 26%, 88% 74%, 50% 96%, 12% 74%, 12% 26%);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(168, 200, 255, 0.08) 2px 3px
+  );
+  mix-blend-mode: screen;
+  z-index: 3;
+  pointer-events: none;
+}
+.avatarGlow {
+  position: absolute;
+  inset: -18%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(139, 123, 255, 0.45) 0%,
+    rgba(106, 166, 255, 0.22) 40%,
+    transparent 75%
+  );
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  z-index: -1;
+  pointer-events: none;
+  animation: breath 5s ease-in-out infinite;
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--fg-4, #5a6082);
+  opacity: 0;
+}
+
+.name {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: clamp(34px, 8.5vw, 52px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  background: linear-gradient(135deg, #5ad7ff 0%, #6aa6ff 45%, #b87bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 24px rgba(106, 166, 255, 0.2);
+}
+.name .char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+.name .space {
+  display: inline-block;
+  width: 0.32em;
+}
+
+.role {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: clamp(12px, 3.4vw, 14px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-2, #c8cde6);
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  border-right: 1px solid var(--accent-cyan, #5ad7ff);
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-cyan, #5ad7ff);
+  background: rgba(90, 215, 255, 0.06);
+  border: 1px solid rgba(90, 215, 255, 0.32);
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+  opacity: 0;
+  transform: scale(0.92);
+}
+.pillDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success, #4ade80);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+}
+
+.scrollHint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--fg-4, #5a6082);
+  opacity: 0;
+  animation: floatHint 2.4s ease-in-out infinite;
+}
+.scrollHint svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--accent-cyan, #5ad7ff);
+  stroke-width: 1.5;
+  fill: none;
+  filter: drop-shadow(0 0 4px rgba(90, 215, 255, 0.6));
+}
+
+/* ---------- Panel 2 — Terminal boot ---------- */
+.terminalWrap {
+  flex-direction: column;
+  gap: 20px;
+}
+.terminalHalo {
+  position: absolute;
+  inset: 20% -10% 20% -10%;
+  background: radial-gradient(
+    50% 60% at 50% 50%,
+    rgba(184, 123, 255, 0.18),
+    rgba(106, 166, 255, 0.1) 40%,
+    transparent 75%
+  );
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+  animation: breath 6s ease-in-out infinite;
+}
+.terminalCard {
+  width: min(92vw, 460px);
+  background: rgba(10, 12, 20, 0.78);
+  border: 1px solid rgba(106, 166, 255, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  clip-path: polygon(
+    0 12px,
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%
+  );
+  box-shadow:
+    0 24px 60px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.terminalBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(106, 166, 255, 0.18);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-3, #8a90ad);
+}
+.terminalDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-cyan, #5ad7ff);
+  box-shadow: 0 0 6px var(--accent-cyan, #5ad7ff);
+}
+.terminalBody {
+  padding: 14px 16px 18px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #c8cde6;
+  white-space: pre;
+  overflow: hidden;
+  min-height: 220px;
+}
+.terminalLine {
+  display: block;
+  opacity: 0.92;
+}
+.terminalCursor {
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  vertical-align: -2px;
+  background: var(--accent-cyan, #5ad7ff);
+  margin-left: 2px;
+  animation: cursorBlink 1s steps(2) infinite;
+  box-shadow: 0 0 6px var(--accent-cyan, #5ad7ff);
+}
+.terminalCaption {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-4, #5a6082);
+  text-align: center;
+  opacity: 0;
+}
+
+/* ---------- Panel 3 — Action stack ---------- */
+.actions {
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+}
+.actionsHeader {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--fg-4, #5a6082);
+  text-align: center;
+  margin-bottom: 8px;
+  opacity: 0;
+}
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px;
+  background: rgba(10, 12, 20, 0.72);
+  border: 1px solid rgba(106, 166, 255, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  clip-path: polygon(
+    0 14px,
+    14px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%
+  );
+  color: var(--fg-1, #f4f6ff);
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 80% at 0% 50%,
+    rgba(106, 166, 255, 0.12),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.cardPrimary {
+  border-color: rgba(184, 123, 255, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(184, 123, 255, 0.08) inset,
+    0 0 24px rgba(139, 123, 255, 0.15);
+}
+.cardPrimary::after {
+  background: radial-gradient(
+    70% 90% at 0% 50%,
+    rgba(184, 123, 255, 0.16),
+    transparent 70%
+  );
+}
+.card:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 0 28px rgba(106, 166, 255, 0.3);
+}
+.cardIcon {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.cardIcon svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cardIconHex {
+  fill: rgba(10, 12, 20, 0.4);
+  stroke: rgba(106, 166, 255, 0.6);
+  stroke-width: 1;
+}
+.cardIconLogo {
+  fill: none;
+  stroke: var(--accent-cyan, #5ad7ff);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.cardIconLogoFill {
+  fill: rgba(90, 215, 255, 0.08);
+  stroke: none;
+}
+.cardPrimary .cardIconHex {
+  stroke: rgba(184, 123, 255, 0.7);
+}
+.cardPrimary .cardIconLogo {
+  stroke: var(--accent-violet, #b87bff);
+}
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+  position: relative;
+}
+.cardLabel {
+  display: block;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-1, #f4f6ff);
+  line-height: 1.1;
+}
+.cardSub {
+  display: block;
+  margin-top: 4px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--fg-3, #8a90ad);
+}
+.cardCta {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent-cyan, #5ad7ff);
+  white-space: nowrap;
+  z-index: 1;
+  position: relative;
+}
+.cardPrimary .cardCta {
+  color: var(--accent-violet, #b87bff);
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  position: relative;
+  padding: 28px 20px 36px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--fg-4, #5a6082);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+.footer span:first-child {
+  color: var(--fg-3, #8a90ad);
+}
+
+/* ---------- Decorations: particles, halos, scan, corners, stats ---------- */
+.particleField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(168, 200, 255, 0.85),
+    rgba(106, 166, 255, 0.2) 60%,
+    transparent 80%
+  );
+  opacity: 0;
+  animation: particleFloat var(--d) ease-in-out infinite var(--delay);
+  will-change: transform, opacity;
+  filter: blur(0.3px);
+}
+
+.panelHalo {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(48px);
+  mix-blend-mode: screen;
+  animation: haloBreath 6s ease-in-out infinite;
+}
+.haloTopRight {
+  top: 4%;
+  right: -10%;
+  width: 60%;
+  height: 36%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(184, 123, 255, 0.32),
+    transparent 70%
+  );
+}
+.haloBottomLeft {
+  bottom: 6%;
+  left: -10%;
+  width: 60%;
+  height: 36%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(106, 166, 255, 0.32),
+    rgba(184, 123, 255, 0.16) 50%,
+    transparent 70%
+  );
+  animation-delay: -2s;
+}
+.haloCenter {
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 50%;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(139, 123, 255, 0.28),
+    rgba(90, 215, 255, 0.14) 50%,
+    transparent 75%
+  );
+  animation-delay: -3s;
+}
+
+.scanPulse {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(90, 215, 255, 0.55) 50%,
+    transparent 100%
+  );
+  opacity: 0.45;
+  filter: blur(0.5px);
+  animation: scanSweep 8s linear infinite;
+}
+.gl-scan-2 {
+  animation-duration: 9s;
+  animation-delay: -3s;
+}
+.gl-scan-3 {
+  animation-duration: 7.5s;
+  animation-delay: -5s;
+}
+
+.corners {
+  position: absolute;
+  inset: 14px;
+  pointer-events: none;
+  z-index: 0;
+}
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: rgba(90, 215, 255, 0.55);
+  opacity: 0.7;
+}
+.cornerTl {
+  top: 0;
+  left: 0;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.cornerTr {
+  top: 0;
+  right: 0;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+.cornerBl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+.cornerBr {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+.statBars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  align-items: stretch;
+}
+.statBar {
+  position: relative;
+  height: 2px;
+  width: var(--w, 70%);
+  background: linear-gradient(
+    90deg,
+    rgba(90, 215, 255, 0.55) 0%,
+    rgba(139, 123, 255, 0.55) 100%
+  );
+  border-radius: 1px;
+  opacity: 0.55;
+  animation: statPulse var(--d, 4s) ease-in-out infinite var(--delay, 0s);
+  align-self: center;
+  max-width: 220px;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes livePulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes breath {
+  0%,
+  100% {
+    opacity: 0.42;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+@keyframes cursorBlink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes floatHint {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, 4px);
+  }
+}
+@keyframes roleTyping {
+  to {
+    width: 100%;
+  }
+}
+@keyframes roleCaret {
+  50% {
+    border-right-color: transparent;
+  }
+}
+@keyframes particleFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(0, -22px, 0);
+    opacity: 0.78;
+  }
+  80% {
+    opacity: 0.32;
+  }
+}
+@keyframes haloBreath {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes scanSweep {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.45;
+  }
+  90% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+@keyframes statPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .avatarGlow,
+  .terminalHalo,
+  .particle,
+  .panelHalo,
+  .scanPulse,
+  .statBar {
+    animation: none;
+  }
+  .particle {
+    opacity: 0.3;
+  }
+  .scanPulse {
+    opacity: 0;
+  }
+  .scrollHint {
+    animation: none;
+    opacity: 1;
+  }
+  .terminalCursor {
+    animation: none;
+  }
+  .eyebrow,
+  .pill,
+  .terminalCard,
+  .terminalCaption,
+  .actionsHeader,
+  .card,
+  .avatarPhoto,
+  .avatarTint,
+  .avatarScan {
+    opacity: 1;
+    transform: none;
+  }
+  .role {
+    width: 100%;
+    border-right-color: transparent;
+  }
+}

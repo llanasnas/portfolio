@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getDb } from "@/lib/db/mongo";
+import { extractIp, hashIp } from "@/lib/db/ip";
 import { containsProfanity } from "@/lib/db/profanity";
 import { checkAndRecordRateLimit } from "@/lib/db/rate-limit";
 import { getActiveSlugs, getSimulation } from "@/lib/simulations/registry";
@@ -23,19 +23,6 @@ function rateLimitFor(): number {
   const env = Number(process.env.LEADERBOARD_RATELIMIT_PER_HOUR);
   if (!Number.isFinite(env) || env <= 0) return 5;
   return Math.floor(env);
-}
-
-function hashIp(ip: string): string {
-  const salt = process.env.MONGODB_DB ?? "portfolio";
-  return createHash("sha256").update(`${ip}::${salt}`).digest("hex").slice(0, 24);
-}
-
-function extractIp(req: NextRequest): string {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim();
-  const real = req.headers.get("x-real-ip");
-  if (real) return real.trim();
-  return "unknown";
 }
 
 function errorResponse(

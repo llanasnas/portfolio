@@ -7,7 +7,16 @@
       "Bash(npm i *)",
       "Bash(powershell *)",
       "Bash(Select-String -Pattern \"simulations|api/leader|lib/db|ui/\\(Holo|Scan|Terminal|Glow\\)|portfolio\\\\\\\\app\\\\\\\\globals|✖\")",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(findstr -i tailwind)",
+      "Bash(mv \"dashboard groupio.mp4\" dashboard_groupio.mp4)",
+      "Bash(mv \"tasks calendar.png\" tasks_calendar.png)",
+      "Bash(npx next *)",
+      "Bash(pdftotext *)",
+      "Bash(npm install *)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

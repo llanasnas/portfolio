@@ -17,12 +17,19 @@ export function timeScore(timeMs: number, config: ScoringConfig): number {
 }
 
 export function efficiencyScore(
-  transfersAfter: number,
-  optimalTransfers: number,
+  manualCount: number,
+  optimalCount: number,
+  initialCount: number,
 ): number {
-  if (optimalTransfers === 0) return transfersAfter === 0 ? 1 : 0;
-  if (transfersAfter <= optimalTransfers) return 1;
-  return optimalTransfers / transfersAfter;
+  // Achieved optimal or better — max score
+  if (manualCount <= optimalCount) return 1;
+  // Initial was already optimal — no room to improve
+  if (initialCount <= optimalCount) return 1;
+  // Fraction of possible improvement the user achieved
+  // 0 if unchanged, 1 if reached optimal, clamped for worse-than-start
+  const maxImprovement = initialCount - optimalCount;
+  const achieved = initialCount - manualCount;
+  return clamp(achieved / maxImprovement, 0, 1);
 }
 
 export function manualBonus(

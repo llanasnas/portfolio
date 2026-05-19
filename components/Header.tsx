@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,7 +8,6 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -17,35 +16,17 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu on route change or outside click
+  // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
 
-  const handleNavClick = useCallback(
-    (href: string) => {
-      setMenuOpen(false);
-      if (isHome && href.startsWith("#")) {
-        const id = href.slice(1);
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-      }
-    },
-    [isHome],
-  );
-
   const navItems = [
     { label: "About", href: "/about" },
-    { label: "CV", href: "/cv" },
-    {
-      label: "Projects",
-      href: isHome ? "#projects" : "/#projects",
-      anchor: true,
-    },
-    {
-      label: "Contact",
-      href: isHome ? "#contact" : "/#contact",
-      anchor: true,
-    },
+    { label: "Journey", href: "/journey" },
+    { label: "Simulations", href: "/simulations" },
+    { label: "Projects", href: "/projects" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
@@ -82,21 +63,11 @@ export function Header() {
             className="hidden md:flex items-center gap-1"
             aria-label="Main navigation"
           >
-            {navItems.map(({ label, href, anchor }) =>
-              anchor && isHome ? (
-                <button
-                  key={label}
-                  onClick={() => handleNavClick(href)}
-                  className="nav-link-btn"
-                >
-                  {label}
-                </button>
-              ) : (
-                <Link key={label} href={href} className="nav-link-btn">
-                  {label}
-                </Link>
-              ),
-            )}
+            {navItems.map(({ label, href }) => (
+              <Link key={label} href={href} className="nav-link-btn">
+                {label}
+              </Link>
+            ))}
 
             {/* CTA */}
             <a
@@ -169,29 +140,19 @@ export function Header() {
           ].join(" ")}
           aria-label="Mobile navigation"
         >
-          {navItems.map(({ label, href, anchor }) =>
-            anchor && isHome ? (
-              <button
-                key={label}
-                onClick={() => handleNavClick(href)}
-                className="mobile-nav-item"
-              >
-                {label}
-              </button>
-            ) : (
-              <Link
-                key={label}
-                href={href}
-                onClick={() => setMenuOpen(false)}
-                className="mobile-nav-item"
-              >
-                {label}
-              </Link>
-            ),
-          )}
+          {navItems.map(({ label, href }) => (
+            <Link
+              key={label}
+              href={href}
+              onClick={() => setMenuOpen(false)}
+              className="mobile-nav-item"
+            >
+              {label}
+            </Link>
+          ))}
 
           <a
-            href="mailto:llanasnas@gmail.com"
+            href="/contact"
             onClick={() => setMenuOpen(false)}
             className="mt-2 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold font-mono tracking-wider text-white"
             style={{ background: "var(--grad-level)" }}

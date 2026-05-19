@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { CODE_LINES, stripHtml, renderPartial } from "@/lib/heroCode";
 import styles from "./HeroMobile.module.css";
 
 interface HeroMobileProps {
   onEnterArchive: () => void;
   onEnterSimulations?: () => void;
+  onEnterProjects?: () => void;
 }
 
 const NAME = "GERARD LLANAS";
@@ -41,21 +41,6 @@ const PARTICLES_PANEL1: Particle[] = [
 ];
 
 const PARTICLES_PANEL2: Particle[] = [
-  { x: 6, y: 18, size: 3, d: 10, delay: -2 },
-  { x: 94, y: 14, size: 2, d: 11, delay: -4 },
-  { x: 4, y: 42, size: 2, d: 9, delay: -1 },
-  { x: 96, y: 38, size: 3, d: 12, delay: -5 },
-  { x: 8, y: 65, size: 2, d: 10, delay: -3 },
-  { x: 92, y: 62, size: 2, d: 11, delay: -6 },
-  { x: 14, y: 86, size: 3, d: 9, delay: -2.5 },
-  { x: 86, y: 88, size: 2, d: 10, delay: -7 },
-  { x: 50, y: 88, size: 2, d: 12, delay: -4.5 },
-  { x: 28, y: 92, size: 1.5, d: 11, delay: -1.5 },
-  { x: 72, y: 92, size: 1.5, d: 9, delay: -5.5 },
-  { x: 50, y: 96, size: 2, d: 13, delay: -3.5 },
-];
-
-const PARTICLES_PANEL3: Particle[] = [
   { x: 10, y: 8, size: 3, d: 10, delay: -1 },
   { x: 90, y: 10, size: 2, d: 11, delay: -3 },
   { x: 22, y: 18, size: 2, d: 9, delay: -5 },
@@ -195,6 +180,22 @@ function SimulationsIcon() {
   );
 }
 
+function ProjectsIcon() {
+  return (
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <polygon className={styles.cardIconHex} points={HEX_POINTS} />
+      <rect className={styles.cardIconLogo} x="30" y="34" width="18" height="14" rx="1.5" />
+      <rect className={styles.cardIconLogo} x="52" y="34" width="18" height="14" rx="1.5" />
+      <rect className={styles.cardIconLogo} x="30" y="52" width="18" height="14" rx="1.5" />
+      <rect className={styles.cardIconLogo} x="52" y="52" width="18" height="14" rx="1.5" />
+      <line className={styles.cardIconLogo} x1="34" y1="40" x2="44" y2="40" strokeWidth="1" />
+      <line className={styles.cardIconLogo} x1="56" y1="40" x2="66" y2="40" strokeWidth="1" />
+      <line className={styles.cardIconLogo} x1="34" y1="58" x2="44" y2="58" strokeWidth="1" />
+      <line className={styles.cardIconLogo} x1="56" y1="58" x2="66" y2="58" strokeWidth="1" />
+    </svg>
+  );
+}
+
 function ArchiveIcon() {
   return (
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -223,13 +224,10 @@ function ArchiveIcon() {
   );
 }
 
-export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroMobileProps) {
+export default function HeroMobile({ onEnterArchive, onEnterSimulations, onEnterProjects }: HeroMobileProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const terminalBodyRef = useRef<HTMLDivElement>(null);
+  const exitingRef = useRef(false);
   const [time, setTime] = useState<Date | null>(null);
-  const [terminalActive, setTerminalActive] = useState(false);
-  const [revealed, setRevealed] = useState(0);
-  const [charsOnLast, setCharsOnLast] = useState(0);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -241,11 +239,7 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
   useEffect(() => {
     if (typeof window === "undefined") return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTerminalActive(true);
-      return;
-    }
+    if (reduced) return;
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
@@ -302,28 +296,7 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
           "-=0.2",
         );
 
-      // Panel 2 — trigger terminal typing on enter
-      ScrollTrigger.create({
-        trigger: ".gl-panel-terminal",
-        start: "top 70%",
-        once: true,
-        onEnter: () => {
-          gsap.to(".gl-terminal-card", {
-            opacity: 1,
-            y: 0,
-            duration: 0.7,
-            ease: "power3.out",
-          });
-          gsap.to(".gl-terminal-caption", {
-            opacity: 1,
-            duration: 0.6,
-            delay: 0.3,
-          });
-          setTerminalActive(true);
-        },
-      });
-
-      // Panel 3 — stagger CTA cards
+      // Actions panel — stagger CTA cards on enter
       ScrollTrigger.create({
         trigger: ".gl-panel-actions",
         start: "top 75%",
@@ -349,46 +322,51 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
     return () => ctx.revert();
   }, []);
 
-  // Terminal typing loop — RAF-driven, only when active
-  useEffect(() => {
-    if (!terminalActive) return;
-    if (revealed >= CODE_LINES.length) return;
-    let raf = 0;
-    let last = performance.now();
-    const targetMs = 36;
-    const tick = (now: number) => {
-      if (now - last > targetMs) {
-        last = now;
-        setCharsOnLast((c) => c + 1);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [terminalActive, revealed]);
-
-  useEffect(() => {
-    if (!terminalActive) return;
-    if (revealed >= CODE_LINES.length) return;
-    const txt = stripHtml(CODE_LINES[revealed].html || "");
-    if (charsOnLast >= txt.length) {
-      const t = setTimeout(() => {
-        setRevealed((r) => r + 1);
-        setCharsOnLast(0);
-      }, 80);
-      return () => clearTimeout(t);
+  // Slide the clicked CTA card then navigate
+  const slideThenRun = useCallback((el: HTMLElement, cb: () => void) => {
+    if (exitingRef.current) return;
+    if (typeof window === "undefined") {
+      cb();
+      return;
     }
-  }, [charsOnLast, revealed, terminalActive]);
-
-  useEffect(() => {
-    if (revealed >= CODE_LINES.length) {
-      const t = setTimeout(() => {
-        setRevealed(0);
-        setCharsOnLast(0);
-      }, 4200);
-      return () => clearTimeout(t);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      cb();
+      return;
     }
-  }, [revealed]);
+    exitingRef.current = true;
+    gsap.to(el, {
+      xPercent: 12,
+      opacity: 0,
+      filter: "blur(4px)",
+      duration: 0.38,
+      ease: "power3.in",
+      onComplete: cb,
+    });
+  }, []);
+
+  const handleArchive = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => slideThenRun(e.currentTarget, onEnterArchive),
+    [slideThenRun, onEnterArchive],
+  );
+  const handleSimulations = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (onEnterSimulations) slideThenRun(e.currentTarget, onEnterSimulations);
+  }, [slideThenRun, onEnterSimulations]);
+  const handleProjects = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    if (onEnterProjects) slideThenRun(e.currentTarget, onEnterProjects);
+  }, [slideThenRun, onEnterProjects]);
+  const handleExternal = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>, url: string) => {
+      const el = e.currentTarget;
+      slideThenRun(el, () => {
+        window.open(url, "_blank", "noopener,noreferrer");
+        // Reset so the user can interact again after returning to the page
+        exitingRef.current = false;
+        gsap.set(el, { clearProps: "all" });
+      });
+    },
+    [slideThenRun],
+  );
 
   const hh = time ? String(time.getHours()).padStart(2, "0") : "--";
   const mm = time ? String(time.getMinutes()).padStart(2, "0") : "--";
@@ -447,54 +425,9 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
         </div>
       </section>
 
-      {/* ---------- Panel 2 — Terminal boot ---------- */}
-      <section className={`${styles.panel} ${styles.terminalWrap} gl-panel-terminal`}>
-        <ParticleField particles={PARTICLES_PANEL2} />
-        <div className={`${styles.panelHalo} ${styles.haloBottomLeft}`} aria-hidden="true" />
-        <div className={`${styles.scanPulse} gl-scan-2`} aria-hidden="true" />
-        <CornerBrackets />
-        <div className={styles.terminalHalo} aria-hidden="true" />
-        <div className={`${styles.terminalCard} gl-terminal-card`}>
-          <div className={styles.terminalBar}>
-            <span className={styles.terminalDot} />
-            pair.ts
-          </div>
-          <div ref={terminalBodyRef} className={styles.terminalBody}>
-            {CODE_LINES.map((line, i) => {
-              if (i < revealed) {
-                return (
-                  <span
-                    key={i}
-                    className={styles.terminalLine}
-                    dangerouslySetInnerHTML={{ __html: line.html || "&nbsp;" }}
-                  />
-                );
-              }
-              if (i === revealed) {
-                const partial = renderPartial(line.html, charsOnLast);
-                return (
-                  <span key={i} className={styles.terminalLine}>
-                    <span dangerouslySetInnerHTML={{ __html: partial || "&nbsp;" }} />
-                    <span className={styles.terminalCursor} />
-                  </span>
-                );
-              }
-              return (
-                <span key={i} className={styles.terminalLine}>
-                  &nbsp;
-                </span>
-              );
-            })}
-          </div>
-        </div>
-        <div className={`${styles.terminalCaption} gl-terminal-caption`}>
-          ↓ boot sequence complete
-        </div>
-      </section>
-
-      {/* ---------- Panel 3 — Action stack ---------- */}
+      {/* ---------- Panel 2 — Action stack ---------- */}
       <section className={`${styles.panel} gl-panel-actions`}>
-        <ParticleField particles={PARTICLES_PANEL3} />
+        <ParticleField particles={PARTICLES_PANEL2} />
         <div className={`${styles.panelHalo} ${styles.haloCenter}`} aria-hidden="true" />
         <div className={`${styles.scanPulse} gl-scan-3`} aria-hidden="true" />
         <CornerBrackets />
@@ -511,7 +444,7 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
           {onEnterSimulations ? (
             <button
               type="button"
-              onClick={onEnterSimulations}
+              onClick={handleSimulations}
               className={`${styles.card} ${styles.cardPrimary} gl-card`}
               aria-label="Enter system simulations"
             >
@@ -526,9 +459,27 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
             </button>
           ) : null}
 
+          {onEnterProjects ? (
+            <button
+              type="button"
+              onClick={handleProjects}
+              className={`${styles.card} ${styles.cardPrimary} gl-card`}
+              aria-label="Browse projects"
+            >
+              <span className={styles.cardIcon}>
+                <ProjectsIcon />
+              </span>
+              <span className={styles.cardBody}>
+                <span className={styles.cardLabel}>Projects</span>
+                <span className={styles.cardSub}>&gt; build.archive</span>
+              </span>
+              <span className={styles.cardCta}>[VIEW] →</span>
+            </button>
+          ) : null}
+
           <button
             type="button"
-            onClick={onEnterArchive}
+            onClick={handleArchive}
             className={`${styles.card} ${styles.cardPrimary} gl-card`}
             aria-label="Open archive"
           >
@@ -542,10 +493,9 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
             <span className={styles.cardCta}>[ENTER] →</span>
           </button>
 
-          <a
-            href="https://github.com/llanasnas"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={(e) => handleExternal(e, "https://github.com/llanasnas")}
             className={`${styles.card} gl-card`}
             aria-label="GitHub profile"
           >
@@ -557,12 +507,11 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
               <span className={styles.cardSub}>&gt; github.com/llanasnas</span>
             </span>
             <span className={styles.cardCta}>→</span>
-          </a>
+          </button>
 
-          <a
-            href="https://linkedin.com/in/gerard-llanas"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={(e) => handleExternal(e, "https://linkedin.com/in/gerard-llanas")}
             className={`${styles.card} gl-card`}
             aria-label="LinkedIn profile"
           >
@@ -574,7 +523,7 @@ export default function HeroMobile({ onEnterArchive, onEnterSimulations }: HeroM
               <span className={styles.cardSub}>&gt; open connection</span>
             </span>
             <span className={styles.cardCta}>→</span>
-          </a>
+          </button>
         </div>
       </section>
 

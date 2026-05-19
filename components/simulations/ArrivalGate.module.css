@@ -1,0 +1,115 @@
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+  animation: arrivalFade 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.flash {
+  position: absolute;
+  inset: -10%;
+  background: radial-gradient(
+    60% 60% at 50% 50%,
+    rgba(220, 245, 255, 0.85) 0%,
+    rgba(90, 215, 255, 0.6) 25%,
+    rgba(139, 123, 255, 0.25) 55%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+  animation: flashShrink 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(168, 200, 255, 0.2) 0 2px,
+    transparent 2px 4px
+  );
+  mix-blend-mode: screen;
+  transform: translateY(0);
+  animation: scanRetract 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-cyan, #5ad7ff);
+  text-shadow:
+    0 0 10px rgba(90, 215, 255, 0.8),
+    0 0 24px rgba(139, 123, 255, 0.4);
+  white-space: nowrap;
+  animation: textFade 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  vertical-align: -2px;
+  background: var(--accent-cyan, #5ad7ff);
+  margin-left: 6px;
+  animation: caretBlink 0.18s steps(2) 4;
+  box-shadow: 0 0 6px var(--accent-cyan, #5ad7ff);
+}
+
+@keyframes arrivalFade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes flashShrink {
+  0% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes scanRetract {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+@keyframes textFade {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes caretBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate {
+    animation: none;
+    display: none;
+  }
+}

@@ -1,0 +1,58 @@
+.scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.scanBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(90, 215, 255, 0.85),
+    transparent
+  );
+  box-shadow:
+    0 0 10px rgba(90, 215, 255, 0.6),
+    0 0 24px rgba(90, 215, 255, 0.4);
+  top: 0;
+  opacity: 0;
+}
+
+.scanGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 60% at 50% 50%,
+    rgba(184, 123, 255, 0.12) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+}
+
+.scanText {
+  position: absolute;
+  bottom: 14px;
+  left: 18px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  opacity: 0;
+  text-shadow: 0 0 8px rgba(90, 215, 255, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanBar,
+  .scanGlow,
+  .scanText {
+    display: none;
+  }
+}

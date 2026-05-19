@@ -1,23 +1,14 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePinProgress } from "@/hooks/usePinProgress";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import { useMouseParallax } from "@/hooks/useMouseParallax";
 import { computeLevel } from "@/lib/progression-system";
 import { progressionData } from "@/lib/progression-data";
 import type { BurstParticle, EquippedSkill } from "@/types/progression";
 import { HUD } from "./hud";
 import { Timeline } from "./timeline";
-import { ProjectsSection } from "./projects";
-import { ContactSection } from "./contact";
+import { TunnelGrid } from "./TunnelGrid";
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
@@ -33,15 +24,16 @@ const STEP = (OUTRO - INTRO) / (DISPLAY_N - 1); // 0.88 / 8 = 0.11
 
 export function HomeClient() {
   const [pinScroll, isPastPin] = usePinProgress();
-  useMouseParallax();
 
   // Continuous display position 0..(DISPLAY_N-1), includes contact card at N
   const mPos = useMemo(() => {
     if (pinScroll <= INTRO) return -0.5 * (1 - pinScroll / INTRO);
-    if (pinScroll >= OUTRO)
-      return DISPLAY_N - 1 + 0.5 * ((pinScroll - OUTRO) / (1 - OUTRO));
+    if (pinScroll >= OUTRO) return DISPLAY_N - 1;
     return (pinScroll - INTRO) / STEP;
   }, [pinScroll]);
+
+  // Tunnel rings flow across full scroll (independent of card clamping)
+  const tunnelPos = useMemo(() => pinScroll * 10, [pinScroll]);
 
   // activeIdx: only milestone indices 0..N-1 (contact card not a milestone)
   const activeIdx = clamp(Math.round(mPos), 0, N - 1);
@@ -109,7 +101,7 @@ export function HomeClient() {
         });
       const t1 = setTimeout(() => setPulseLvl(false), 900);
       const t2 = setTimeout(() => setPulseXP(false), 900);
-      const t3 = setTimeout(() => setToast(null), 1000);
+      const t3 = setTimeout(() => setToast(null), 1600);
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
@@ -158,13 +150,6 @@ export function HomeClient() {
 
   return (
     <>
-      {/* Animated background */}
-      <div className="bg" aria-hidden="true">
-        <div className="blob b1" />
-        <div className="blob b2" />
-        <div className="blob b3" />
-      </div>
-
       {/* Top chrome */}
       <div className={`top-chrome${isPastPin ? " is-hidden" : ""}`}>
         <div className="brand-mini">
@@ -194,6 +179,20 @@ export function HomeClient() {
       {/* Scroll pin shell */}
       <main className="pin-shell relative z-10 mt-10 md:mt-0">
         <div className="pin-stage">
+          <TunnelGrid mPos={tunnelPos} />
+          <div className="cv-dust" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+
           {/* Intro overlay */}
           <div className={`intro-title${!showIntro ? " is-fading" : ""}`}>
             <div className="intro-title__eyebrow">
@@ -238,27 +237,22 @@ export function HomeClient() {
         <span className="hint__arrow">↓</span>
       </div>
 
-      {/* Level-up dramatic overlay */}
+      {/* Level-up lateral toast (HUD stays visible) */}
       {toast && (
         <div
           key={toast.level}
-          className="lvlup-overlay"
-          aria-live="assertive"
+          className="lvlup-toast"
+          role="status"
+          aria-live="polite"
           aria-label={`Level up! Level ${toast.level} — ${toast.title}`}
         >
-          <div className="lvlup-bg-flash" aria-hidden="true" />
-          <div className="lvlup-card">
-            <p className="lvlup-label">LEVEL UP</p>
-            <div className="lvlup-num">LV {toast.level}</div>
-            <div className="lvlup-rank">{toast.title}</div>
-            <div className="lvlup-sub">UNLOCKED</div>
-          </div>
+          <span className="lvlup-toast__label">LEVEL UP</span>
+          <span className="lvlup-toast__num">LV {toast.level}</span>
+          <span className="lvlup-toast__rank">{toast.title}</span>
         </div>
       )}
 
       {/* Post-pin sections */}
-      <ProjectsSection />
-      <ContactSection />
     </>
   );
 }

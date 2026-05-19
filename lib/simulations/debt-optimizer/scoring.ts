@@ -35,8 +35,8 @@ export function scoreDebtRun(args: ScoreArgs): DebtScoreBreakdown {
   const optimalCount = args.optimalResult.transfers.length;
   const manualCount = args.manualTransfers.length;
 
-  // Use the actual manual count — more arrows than optimal = penalized score
-  const efficiency = efficiencyScore(manualCount, optimalCount);
+  // Use improvement ratio: 0 if unchanged, 1 if reached optimal
+  const efficiency = efficiencyScore(manualCount, optimalCount, args.initialTransferCount);
   const time = timeScore(args.timeMs, args.config);
   const mb = manualBonus(args.manualMoves, args.initialTransferCount);
 

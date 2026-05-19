@@ -36,7 +36,9 @@ export function ScoreSubmit({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submittedRank, setSubmittedRank] = useState<number | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse["entries"] | null>(null);
+  const [leaderboard, setLeaderboard] = useState<
+    LeaderboardResponse["entries"] | null
+  >(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,9 +79,7 @@ export function ScoreSubmit({
           seed,
         }),
       });
-      const json = (await res.json()) as
-        | SubmitScoreResponse
-        | SubmitScoreError;
+      const json = (await res.json()) as SubmitScoreResponse | SubmitScoreError;
       if (!res.ok || !("ok" in json) || !json.ok) {
         const err = json as SubmitScoreError;
         setError(translateError(err));
@@ -94,7 +94,9 @@ export function ScoreSubmit({
       // Fetch leaderboard to show after submit
       try {
         const limit = Math.max(5, json.rank);
-        const lbRes = await fetch(`/api/leaderboard?slug=${slug}&limit=${limit}`);
+        const lbRes = await fetch(
+          `/api/leaderboard?slug=${slug}&limit=${limit}`,
+        );
         const lbData = (await lbRes.json()) as LeaderboardResponse;
         setLeaderboard(lbData.entries);
       } catch {
@@ -128,8 +130,7 @@ export function ScoreSubmit({
               ) : (
                 <div className={styles.lbRows}>
                   {leaderboard.slice(0, 5).map((entry, i) => {
-                    const isSelf =
-                      entry.nickname === nick.trim().toUpperCase();
+                    const isSelf = entry.nickname === nick.trim().toUpperCase();
                     return (
                       <div
                         key={entry.rank}
@@ -226,7 +227,9 @@ export function ScoreSubmit({
                 autoComplete="off"
                 spellCheck={false}
                 onChange={(e) =>
-                  setNick(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""))
+                  setNick(
+                    e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ""),
+                  )
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") submit();
@@ -236,12 +239,18 @@ export function ScoreSubmit({
               {error ? (
                 <div className={styles.error}>{error}</div>
               ) : (
-                <div className={styles.hint}>3–16 · uppercase, digits, underscore</div>
+                <div className={styles.hint}>
+                  3–16 · uppercase, digits, underscore
+                </div>
               )}
             </div>
 
             <div className={styles.actions}>
-              <GlowButton variant="ghost" onClick={onClose} disabled={submitting}>
+              <GlowButton
+                variant="ghost"
+                onClick={onClose}
+                disabled={submitting}
+              >
                 Skip
               </GlowButton>
               <GlowButton

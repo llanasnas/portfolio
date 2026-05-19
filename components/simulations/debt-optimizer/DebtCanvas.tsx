@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Transfer, UserNode } from "@/lib/simulations/debt-optimizer";
 import { GlowButton } from "@/components/ui/GlowButton";
 import styles from "./DebtCanvas.module.css";
@@ -18,6 +18,10 @@ interface DebtCanvasProps {
   optimal?: boolean;
   netByUser?: Record<string, number>;
   canEdit?: boolean;
+  hasStarted?: boolean;
+  isComplete?: boolean;
+  onStart?: () => void;
+  onResetToInitial?: () => void;
 }
 
 const VIEW_W = 800;
@@ -44,12 +48,11 @@ export function DebtCanvas({
   optimal = false,
   netByUser,
   canEdit = true,
+  hasStarted = false,
+  isComplete = false,
+  onStart = () => {},
+  onResetToInitial = () => {},
 }: DebtCanvasProps) {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addFrom, setAddFrom] = useState(users[0]?.id ?? "");
-  const [addTo, setAddTo] = useState(users[1]?.id ?? "");
-  const [addAmount, setAddAmount] = useState("");
-
   const visibleTransfers = useMemo(() => {
     if (!filterExpenseId) return transfers;
     return transfers.filter((t) => t.expenseId === filterExpenseId);
@@ -218,94 +221,27 @@ export function DebtCanvas({
       </div>
 
       <div className={styles.helper} aria-live="polite">
-        {selectedTransfer
-          ? `> reroute ${selectedTransfer.from} → ? · click target node`
-          : optimal
-            ? "> optimized network · greedy minimum"
-            : filterExpenseId
-              ? `> filtered by expense · ${visibleTransfers.length} arrow(s) shown`
-              : "> click a transfer · then click a node to reroute"}
+        {optimal
+          ? "> optimized network · greedy minimum"
+          : filterExpenseId
+            ? `> filtered by expense · ${visibleTransfers.length} arrow(s) shown`
+            : !hasStarted
+              ? "> read-only · press START to start the simulation"
+              : `> ${transfers.length} transfer(s) active · use sendResponse() to modify`}
       </div>
 
-      {canEdit && (
-        <div className={styles.actions}>
-          {selectedTransfer ? (
-            <GlowButton
-              variant="danger"
-              size="sm"
-              onClick={() => onDelete(selectedTransfer.id)}
-            >
-              ✕ Delete
-            </GlowButton>
-          ) : null}
-          {!optimal && transfers.length > 0 && !selectedTransfer && (
-            <GlowButton variant="ghost" size="sm" onClick={onDeleteAll}>
-              ✕ Clear All
-            </GlowButton>
-          )}
-          {!optimal && !selectedTransfer && (
-            <GlowButton
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAddForm((v) => !v)}
-            >
-              {showAddForm ? "✕ Cancel" : "+ Add Transfer"}
-            </GlowButton>
-          )}
-        </div>
-      )}
-
-      {showAddForm && canEdit && !optimal && (
-        <div className={styles.addForm}>
-          <span className={styles.addFormLabel}>from</span>
-          <select
-            className={styles.addSelect}
-            value={addFrom}
-            onChange={(e) => setAddFrom(e.target.value)}
-          >
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-          <span className={styles.addFormLabel}>→</span>
-          <select
-            className={styles.addSelect}
-            value={addTo}
-            onChange={(e) => setAddTo(e.target.value)}
-          >
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-          <input
-            className={styles.addInput}
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="€ amount"
-            value={addAmount}
-            onChange={(e) => setAddAmount(e.target.value)}
-          />
-          <GlowButton
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              const amt = parseFloat(addAmount);
-              if (!isNaN(amt) && amt > 0 && addFrom !== addTo) {
-                onAddTransfer(addFrom, addTo, amt);
-                setAddAmount("");
-                setShowAddForm(false);
-              }
-            }}
-          >
-            Add
+      <div className={styles.actions}>
+        {!hasStarted && !isComplete && (
+          <GlowButton variant="primary" size="lg" onClick={onStart}>
+            ▶ START
           </GlowButton>
-        </div>
-      )}
+        )}
+        {hasStarted && !isComplete && (
+          <GlowButton variant="ghost" size="sm" onClick={onResetToInitial}>
+            ↺ Reset Canvas
+          </GlowButton>
+        )}
+      </div>
     </div>
   );
 }

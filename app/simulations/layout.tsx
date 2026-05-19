@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { HoloChromeBackground } from "@/components/ui/HoloChromeBackground";
 import { Scanlines } from "@/components/ui/Scanlines";
+import ArrivalGate from "@/components/simulations/ArrivalGate";
 import styles from "./layout.module.css";
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function SimulationsLayout({
     <div data-zone="simulations" className={styles.shell}>
       <HoloChromeBackground />
       <Scanlines fixed sweep />
+      <ArrivalGate />
       <div className={styles.content}>{children}</div>
     </div>
   );

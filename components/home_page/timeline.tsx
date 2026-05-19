@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { type CSSProperties } from "react";
 import type { Milestone } from "@/types/progression";
 import { milestoneRarity } from "@/lib/progression-system";
 import { SkillBadge } from "./skills";
+import Link from "next/link";
 
 interface TimelineProps {
   milestones: Milestone[];
@@ -18,6 +13,43 @@ interface TimelineProps {
   railPct: number;
   onScrollToContact: () => void;
   onScrollToMilestone: (idx: number) => void;
+}
+
+const DEPTH_GAP = 620;
+const FORWARD_RANGE = 2.2; // upcoming cards visible up to this dist
+const BACKWARD_RANGE = 1.1; // passed cards visible up to this dist
+
+function cardStyle(i: number, mPos: number): CSSProperties {
+  const di = i - mPos;
+
+  if (di > FORWARD_RANGE || di < -BACKWARD_RANGE) {
+    return { display: "none" };
+  }
+
+  let tz: number;
+  let tyPct: number;
+  let opacity: number;
+
+  if (di >= 0) {
+    // upcoming/active — sit in tunnel at depth
+    tz = -di * DEPTH_GAP;
+    tyPct = -50;
+    opacity = 1;
+  } else {
+    // passed — fly upward and fade
+    const t = -di; // 0..BACKWARD_RANGE
+    tz = -t * DEPTH_GAP * 0.45;
+    tyPct = -50 - t * 140;
+    opacity = Math.max(0, 1 - t / BACKWARD_RANGE);
+  }
+
+  const zIndex = 1000 - Math.round(Math.abs(tz));
+  return {
+    transform: `translate3d(-50%, ${tyPct}%, ${tz}px)`,
+    opacity,
+    zIndex,
+    pointerEvents: Math.abs(di) < 0.5 ? "auto" : "none",
+  };
 }
 
 export function Timeline({
@@ -29,137 +61,10 @@ export function Timeline({
   onScrollToMilestone,
 }: TimelineProps) {
   const N = milestones.length;
-  const [innerWidth, setInnerWidth] = useState(0);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setInnerWidth(window.innerWidth);
-    const handleResize = () => setInnerWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Mobile: convert horizontal swipe into vertical page scroll
-  // Perf: RAF-coalesced, threshold-gated. Skip preventDefault until horizontal intent confirmed
-  // (lets the browser drive vertical pan natively; we hijack only when user swipes sideways).
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-
-    let startX = 0;
-    let startY = 0;
-    let scrollStart = 0;
-    let pendingTop = 0;
-    let raf = 0;
-    let tracking = false;
-    let claimed = false; // true once gesture confirmed horizontal
-
-    const flush = () => {
-      raf = 0;
-      window.scrollTo(0, pendingTop);
-    };
-
-    function onTouchStart(e: TouchEvent) {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      scrollStart = window.scrollY;
-      pendingTop = scrollStart;
-      tracking = true;
-      claimed = false;
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      if (!tracking) return;
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      const adx = Math.abs(dx);
-      const ady = Math.abs(dy);
-
-      if (!claimed) {
-        // Wait for clear horizontal intent before hijacking
-        if (adx < 8 && ady < 8) return;
-        if (adx < ady * 0.9) {
-          // Vertical-dominant gesture — release and let browser handle
-          tracking = false;
-          return;
-        }
-        claimed = true;
-      }
-
-      e.preventDefault();
-      pendingTop = scrollStart - dx * 1.6;
-      if (raf === 0) raf = requestAnimationFrame(flush);
-    }
-
-    function onTouchEnd() {
-      tracking = false;
-      claimed = false;
-      if (raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    }
-
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd, { passive: true });
-    el.addEventListener("touchcancel", onTouchEnd, { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-      el.removeEventListener("touchcancel", onTouchEnd);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  const cardWidth = useMemo(() => {
-    if (innerWidth === 0) return 440; // SSR / first render: default desktop width
-    // Must match CSS: mobile ≤760px → width: min(320px, 100vw - 48px)
-    const slideWidth = innerWidth <= 760 ? Math.min(320, innerWidth - 48) : 440;
-    return slideWidth + innerWidth * 0.08;
-  }, [innerWidth]);
-  const trackTransform = `translate3d(${-mPos * cardWidth}px, 0, 0)`;
 
   return (
-    <div ref={wrapRef} className="track-wrap p-12 md:p-12">
-      <div
-        className="track-rail"
-        style={{ "--prog-pct": `${railPct}%` } as CSSProperties}
-      >
-        {milestones.map((m, i) => {
-          const left = (i / (N - 1)) * 100;
-          const passed = i < activeIdx;
-          const isActive = i === activeIdx;
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => onScrollToMilestone(i)}
-              aria-label={`Go to milestone ${i + 1}: ${m.title}`}
-              className={[
-                "rail-node",
-                passed ? "is-passed" : "",
-                isActive ? "is-active" : "",
-                i === N - 1 ? "is-final" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              style={{ left: `${left}%` }}
-            >
-              <span className="rail-node-label">
-                {m.dateRange.split(" – ")[0]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        className="track-cards is-scrubbing"
-        style={{ transform: trackTransform, marginTop: 80 }}
-      >
-        {/* Milestone cards */}
+    <div className="track-wrap">
+      <div className="track-cards">
         {milestones.map((m, i) => {
           const dist = Math.abs(mPos - i);
           let cls = "";
@@ -172,6 +77,7 @@ export function Timeline({
             <article
               key={i}
               className={`mslide mslide--${m.type} mslide--${rarity}${cls ? ` ${cls}` : ""}`}
+              style={cardStyle(i, mPos)}
             >
               <header className="mslide__card-header">
                 <div className="mslide__badge">
@@ -216,13 +122,13 @@ export function Timeline({
           );
         })}
 
-        {/* Request Mission contact card */}
         {(() => {
           const dist = Math.abs(mPos - N);
           const cls = dist < 0.4 ? "is-active" : dist < 1.2 ? "is-near" : "";
           return (
             <article
               className={`mslide mslide--contact mslide--legendary${cls ? ` ${cls}` : ""}`}
+              style={cardStyle(N, mPos)}
             >
               <header className="mslide__card-header">
                 <div className="mslide__badge">
@@ -246,23 +152,58 @@ export function Timeline({
                   style={{ color: "var(--fg-1)" }}
                 >
                   <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
+                    width="26"
+                    height="26"
+                    viewBox="0 0 32 32"
                     fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-arrow-up-wide-narrow-icon lucide-arrow-up-wide-narrow transform animate-bounce"
+                    className="cyber-level-icon"
+                    aria-hidden="true"
                   >
-                    <path d="m3 8 4-4 4 4" />
-                    <path d="M7 4v16" />
-                    <path d="M11 12h10" />
-                    <path d="M11 16h7" />
-                    <path d="M11 20h4" />
+                    <defs>
+                      <linearGradient
+                        id="cyber-level-grad"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="32"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop offset="0%" stopColor="#5ad7ff" />
+                        <stop offset="55%" stopColor="#b87bff" />
+                        <stop offset="100%" stopColor="#ff2dcf" />
+                      </linearGradient>
+                    </defs>
+                    {/* hex frame */}
+                    <path
+                      d="M16 2 L28 9 L28 23 L16 30 L4 23 L4 9 Z"
+                      stroke="url(#cyber-level-grad)"
+                      strokeWidth="1.5"
+                      strokeLinejoin="miter"
+                      opacity="0.55"
+                    />
+                    {/* chase chevrons */}
+                    <path
+                      className="cyber-level-icon__chev cyber-level-icon__chev--1"
+                      d="M9 19 L16 13 L23 19"
+                      stroke="url(#cyber-level-grad)"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      className="cyber-level-icon__chev cyber-level-icon__chev--2"
+                      d="M9 23 L16 17 L23 23"
+                      stroke="url(#cyber-level-grad)"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {/* corner blips */}
+                    <circle cx="4" cy="9" r="1.2" fill="#5ad7ff" />
+                    <circle cx="28" cy="9" r="1.2" fill="#5ad7ff" />
+                    <circle cx="16" cy="30" r="1.2" fill="#ff2dcf" />
                   </svg>
-                  Make me level up!{" "}
+                  Make me level up!
                 </p>
                 <a href="mailto:llanasnas@gmail.com" className="contact-link">
                   <span className="contact-link__icon">✉</span>
@@ -288,14 +229,46 @@ export function Timeline({
                 </a>
               </div>
 
-              <div className="mslide__contact-cta">
-                <button className="btn-mission" onClick={onScrollToContact}>
+              <div className="mslide__contact-cta w-full px-0">
+                <Link className="btn-mission w-full px-0 block" href="/contact">
                   ↓ Begin Mission
-                </button>
+                </Link>
               </div>
             </article>
           );
         })()}
+      </div>
+
+      <div
+        className="track-rail"
+        style={{ "--prog-pct": `${railPct}%` } as CSSProperties}
+      >
+        {milestones.map((m, i) => {
+          const left = (i / (N - 1)) * 100;
+          const passed = i < activeIdx;
+          const isActive = i === activeIdx;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onScrollToMilestone(i)}
+              aria-label={`Go to milestone ${i + 1}: ${m.title}`}
+              className={[
+                "rail-node",
+                passed ? "is-passed" : "",
+                isActive ? "is-active" : "",
+                i === N - 1 ? "is-final" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              style={{ left: `${left}%` }}
+            >
+              <span className="rail-node-label">
+                {m.dateRange.split(" – ")[0]}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

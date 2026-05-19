@@ -97,9 +97,14 @@ export function HUD({
       <div className={`hud-body${expanded ? " hud-body--open" : ""}`}>
         {/* IDENTITY */}
         <section className="hud-id">
-          <div className="hud-id__avatar" aria-hidden>
+          {/* <div className="hud-id__avatar" aria-hidden>
             {initials}
-          </div>
+          </div> */}
+          <img
+            src={`/assets/avatar_portfolio.png`}
+            alt={`${name}'s avatar`}
+            className="hud-id__avatar"
+          />
           <div className="hud-id__text">
             <h2 className="hud-id__name">{name}</h2>
             <p className="hud-id__role">{role}</p>

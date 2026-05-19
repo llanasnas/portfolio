@@ -108,7 +108,9 @@
   border-radius: var(--radius-xs, 4px);
   color: var(--fg-1);
   outline: none;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .input:focus {
@@ -151,9 +153,18 @@
 
 /* ── Rank reveal ──────────────────────────────────── */
 @keyframes rankPop {
-  0%   { transform: scale(0.55) translateY(6px); opacity: 0; }
-  65%  { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0% {
+    transform: scale(0.55) translateY(6px);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 .rankReveal {
@@ -187,8 +198,14 @@
 
 /* ── Leaderboard ─────────────────────────────────── */
 @keyframes rowIn {
-  from { opacity: 0; transform: translateY(7px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lbContainer {

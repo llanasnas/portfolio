@@ -9,6 +9,44 @@
   border-radius: var(--radius-md, 10px);
 }
 
+.expandedOverlay {
+  position: fixed;
+  top: var(--header-h, 56px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(6, 8, 16, 0.99);
+  border-top: 1px solid rgba(90, 215, 255, 0.15);
+  overflow: hidden;
+}
+
+/* In expanded portal, editor takes up ~65% of available height */
+.expandedOverlay .editorWrap {
+  flex: 1 1 65vh;
+  max-height: none;
+  min-height: 60vh;
+}
+
+/* Console gets more room too */
+.expandedOverlay .console {
+  max-height: 220px;
+}
+
+.expandedPlaceholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-4);
+  opacity: 0.4;
+  gap: 10px;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -49,6 +87,25 @@
 .resetBtn:hover {
   border-color: rgba(90, 215, 255, 0.4);
   color: var(--fg-2);
+}
+
+.expandBtn {
+  background: none;
+  border: 1px solid rgba(106, 166, 255, 0.2);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-4);
+  cursor: pointer;
+  transition:
+    border-color 150ms,
+    color 150ms;
+  line-height: 1.6;
+}
+.expandBtn:hover {
+  border-color: rgba(90, 215, 255, 0.4);
+  color: var(--accent-cyan);
 }
 
 .editorWrap {
@@ -214,22 +271,45 @@
 
 /* ── Anti-paste alarm overlay ──────────────────────── */
 @keyframes alarmPulse {
-  0%,100% { background-color: rgba(150, 0, 0, 0.93); }
-  50%     { background-color: rgba(240, 20, 20, 0.98); }
+  0%,
+  100% {
+    background-color: rgba(150, 0, 0, 0.93);
+  }
+  50% {
+    background-color: rgba(240, 20, 20, 0.98);
+  }
 }
 
 @keyframes imgShake {
-  0%,100% { transform: rotate(0deg) scale(1); }
-  15%     { transform: rotate(-5deg) scale(1.06); }
-  30%     { transform: rotate(5deg) scale(1.06); }
-  45%     { transform: rotate(-4deg) scale(1.03); }
-  60%     { transform: rotate(4deg) scale(1.03); }
-  75%     { transform: rotate(-2deg) scale(1.01); }
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  15% {
+    transform: rotate(-5deg) scale(1.06);
+  }
+  30% {
+    transform: rotate(5deg) scale(1.06);
+  }
+  45% {
+    transform: rotate(-4deg) scale(1.03);
+  }
+  60% {
+    transform: rotate(4deg) scale(1.03);
+  }
+  75% {
+    transform: rotate(-2deg) scale(1.01);
+  }
 }
 
 @keyframes textFlash {
-  0%,100% { opacity: 1; }
-  50%     { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .alarmOverlay {
@@ -245,7 +325,7 @@
 }
 
 .alarmOverlay::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background-image: repeating-linear-gradient(
@@ -308,4 +388,191 @@
   margin-top: 4px;
   margin-bottom: 0;
   animation: textFlash 1.2s infinite;
+}
+
+/* ── Lock screen ─────────────────────────────────────────────── */
+.lockScreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.lockIcon {
+  font-size: 28px;
+  opacity: 0.25;
+  line-height: 1;
+}
+
+.lockMsg {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-3, #8ba0b4);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lockMsg strong {
+  color: var(--accent-cyan, #5ad7ff);
+}
+
+.lockSub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-4, #4b5e70);
+  margin: 0;
+}
+
+/* ── API info panel (above editor) ──────────────────────────── */
+.apiPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 14px 12px;
+  background: rgba(6, 10, 20, 0.65);
+  border: 1px solid rgba(90, 215, 255, 0.12);
+  border-radius: var(--radius-md, 10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* top accent line */
+.apiPanel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(90, 215, 255, 0.35) 30%,
+    rgba(90, 215, 255, 0.35) 70%,
+    transparent
+  );
+}
+
+.apiPanelHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.apiPanelTag {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(90, 215, 255, 0.55);
+  background: rgba(90, 215, 255, 0.07);
+  border: 1px solid rgba(90, 215, 255, 0.18);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.apiPanelTitle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-2, #a0b8cc);
+  letter-spacing: 0.03em;
+}
+
+.apiPanelSubtitle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-4, #4b5e70);
+}
+
+.apiPanelSig {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #5ad7ff;
+  background: rgba(90, 215, 255, 0.05);
+  border: 1px solid rgba(90, 215, 255, 0.1);
+  border-radius: 5px;
+  padding: 6px 10px;
+  letter-spacing: 0.01em;
+}
+
+.apiPanelRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.apiPanelLabel {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-4, #4b5e70);
+  padding-top: 3px;
+  flex-shrink: 0;
+  min-width: 40px;
+}
+
+.apiPanelBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.apiPanelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(90, 215, 255, 0.05);
+  border: 1px solid rgba(90, 215, 255, 0.14);
+  border-radius: 4px;
+  padding: 2px 7px 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.apiBadgeName {
+  color: var(--fg-2, #a0b8cc);
+  font-weight: 500;
+}
+
+.apiBadgeId {
+  color: rgba(90, 215, 255, 0.5);
+  font-size: 9px;
+}
+
+.apiPanelWarns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.apiPanelWarnA {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(90, 215, 255, 0.35);
+}
+
+.apiPanelWarnB {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(251, 100, 100, 0.4);
+}
+
+.warnIcon {
+  opacity: 0.7;
+  font-size: 10px;
 }

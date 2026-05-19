@@ -17,40 +17,9 @@
   font-family: "Inter", system-ui, sans-serif;
   color: #c8cde6;
   -webkit-font-smoothing: antialiased;
-
   /* Cyberpunk bg visible cuando la imagen no llena el viewport */
   background-color: #03040c;
-  background-image:
-    /* grid de líneas horizontales y verticales */
-    linear-gradient(rgba(90, 215, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(90, 215, 255, 0.04) 1px, transparent 1px),
-    /* halo violeta central (ciudad de fondo) */
-    radial-gradient(
-        ellipse 80% 55% at 50% 100%,
-        rgba(184, 123, 255, 0.18) 0%,
-        transparent 65%
-      ),
-    /* halo cian izquierda */
-    radial-gradient(
-        ellipse 40% 40% at 10% 100%,
-        rgba(90, 215, 255, 0.12) 0%,
-        transparent 60%
-      ),
-    /* halo cian derecha */
-    radial-gradient(
-        ellipse 40% 40% at 90% 100%,
-        rgba(90, 215, 255, 0.1) 0%,
-        transparent 60%
-      ),
-    /* base oscura casi negra con tinte azul */
-    linear-gradient(180deg, #03040c 0%, #060818 60%, #080b1a 100%);
-  background-size:
-    40px 40px,
-    40px 40px,
-    auto,
-    auto,
-    auto,
-    auto;
+  background-image: url("/assets/cv_bg.webp") center center;
 }
 .stage {
   position: absolute;
@@ -528,29 +497,105 @@
 }
 
 /* Per-particle position + timing */
-.dust span:nth-child(1)  { left:  8%; top: 100%; animation-duration: 18s; animation-delay:  -2s; }
-.dust span:nth-child(2)  { left: 22%; top: 100%; animation-duration: 24s; animation-delay:  -9s; }
-.dust span:nth-child(3)  { left: 38%; top: 100%; animation-duration: 21s; animation-delay: -14s; }
-.dust span:nth-child(4)  { left: 54%; top: 100%; animation-duration: 27s; animation-delay:  -5s; }
-.dust span:nth-child(5)  { left: 70%; top: 100%; animation-duration: 19s; animation-delay: -18s; }
-.dust span:nth-child(6)  { left: 88%; top: 100%; animation-duration: 23s; animation-delay:  -7s; }
-.dust span:nth-child(7)  { left: 15%; top: 100%; animation-duration: 26s; animation-delay: -22s; }
-.dust span:nth-child(8)  { left: 46%; top: 100%; animation-duration: 20s; animation-delay: -11s; }
-.dust span:nth-child(9)  { left: 63%; top: 100%; animation-duration: 28s; animation-delay:  -4s; }
-.dust span:nth-child(10) { left: 82%; top: 100%; animation-duration: 22s; animation-delay: -16s; }
+.dust span:nth-child(1) {
+  left: 8%;
+  top: 100%;
+  animation-duration: 18s;
+  animation-delay: -2s;
+}
+.dust span:nth-child(2) {
+  left: 22%;
+  top: 100%;
+  animation-duration: 24s;
+  animation-delay: -9s;
+}
+.dust span:nth-child(3) {
+  left: 38%;
+  top: 100%;
+  animation-duration: 21s;
+  animation-delay: -14s;
+}
+.dust span:nth-child(4) {
+  left: 54%;
+  top: 100%;
+  animation-duration: 27s;
+  animation-delay: -5s;
+}
+.dust span:nth-child(5) {
+  left: 70%;
+  top: 100%;
+  animation-duration: 19s;
+  animation-delay: -18s;
+}
+.dust span:nth-child(6) {
+  left: 88%;
+  top: 100%;
+  animation-duration: 23s;
+  animation-delay: -7s;
+}
+.dust span:nth-child(7) {
+  left: 15%;
+  top: 100%;
+  animation-duration: 26s;
+  animation-delay: -22s;
+}
+.dust span:nth-child(8) {
+  left: 46%;
+  top: 100%;
+  animation-duration: 20s;
+  animation-delay: -11s;
+}
+.dust span:nth-child(9) {
+  left: 63%;
+  top: 100%;
+  animation-duration: 28s;
+  animation-delay: -4s;
+}
+.dust span:nth-child(10) {
+  left: 82%;
+  top: 100%;
+  animation-duration: 22s;
+  animation-delay: -16s;
+}
 
 @keyframes holoFloatA {
-  0%   { transform: translate3d(0, 0, 0);          opacity: 0;   }
-  6%   { opacity: 0.7;                                            }
-  48%  { transform: translate3d(16px, -50vh, 0);   opacity: 0.5; }
-  88%  { opacity: 0.2;                                            }
-  100% { transform: translate3d(-8px, -108vh, 0);  opacity: 0;   }
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.7;
+  }
+  48% {
+    transform: translate3d(16px, -50vh, 0);
+    opacity: 0.5;
+  }
+  88% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate3d(-8px, -108vh, 0);
+    opacity: 0;
+  }
 }
 
 @keyframes holoFloatB {
-  0%   { transform: translate3d(0, 0, 0);           opacity: 0;   }
-  6%   { opacity: 0.6;                                             }
-  48%  { transform: translate3d(-12px, -52vh, 0);   opacity: 0.4; }
-  88%  { opacity: 0.2;                                             }
-  100% { transform: translate3d(10px, -108vh, 0);   opacity: 0;   }
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.6;
+  }
+  48% {
+    transform: translate3d(-12px, -52vh, 0);
+    opacity: 0.4;
+  }
+  88% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate3d(10px, -108vh, 0);
+    opacity: 0;
+  }
 }

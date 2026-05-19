@@ -10,6 +10,7 @@ interface RunControlsProps {
   manualCount: number;
   manualMoves: number;
   optimalCount: number | null;
+  elapsedMs: number;
   canRun: boolean;
   isComplete: boolean;
   onRun: () => void;
@@ -23,11 +24,20 @@ export function RunControls({
   manualCount,
   manualMoves,
   optimalCount,
+  elapsedMs,
   canRun,
   isComplete,
   onRun,
   onReset,
 }: RunControlsProps) {
+  const ticking = elapsedMs > 0 && !isComplete;
+
+  function formatTime(ms: number): string {
+    if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
+    const m = Math.floor(ms / 60_000);
+    const s = ((ms % 60_000) / 1000).toFixed(1).padStart(4, "0");
+    return `${m}:${s}`;
+  }
   return (
     <div className={styles.root}>
       <div className={styles.stats}>
@@ -53,6 +63,16 @@ export function RunControls({
             className={`${styles.statValue} ${optimalCount !== null ? styles.statValueWin : ""}`}
           >
             {optimalCount !== null ? optimalCount : "—"}
+          </span>
+        </div>
+        <div
+          className={`${styles.statTile} ${ticking ? styles.statTileTimer : ""} ${isComplete && elapsedMs > 0 ? styles.statTileDone : ""}`}
+        >
+          <span className={styles.statLabel}>Time</span>
+          <span
+            className={`${styles.statValue} ${ticking ? styles.statValueTimer : ""} ${isComplete && elapsedMs > 0 ? styles.statValueWin : ""}`}
+          >
+            {elapsedMs > 0 ? formatTime(elapsedMs) : "—"}
           </span>
         </div>
       </div>

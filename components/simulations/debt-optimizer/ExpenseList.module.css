@@ -29,11 +29,12 @@
   color: var(--fg-4);
 }
 
+/* auto widths but not scroll, so we can wrap items to multiple rows if needed */
 .list {
   flex: 1;
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 2px;
   padding: 6px;
   scrollbar-width: thin;
@@ -51,6 +52,7 @@
 .item {
   width: 100%;
   text-align: left;
+  flex: 0 1 auto;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(106, 166, 255, 0.1);
   border-radius: 6px;

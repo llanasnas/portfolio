@@ -1,6 +1,9 @@
 ﻿"use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSectionParallax } from "@/hooks/useSectionParallax";
+import { TransmitAnimation, TransmitSuccess } from "./ContactTransmit";
+
+const MIN_TRANSMIT_MS = 1600;
 
 type RequestType = "freelance" | "job" | "message";
 
@@ -22,20 +25,67 @@ const PLACEHOLDERS: Record<RequestType, string> = {
   message: "What's on your mind?",
 };
 
+type SendStatus = "idle" | "sending" | "sent" | "error";
+
 export function ContactSection() {
   const [type, setType] = useState<RequestType>("freelance");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<SendStatus>("idle");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [company, setCompany] = useState(""); // honeypot
+  const formOpenedRef = useRef<number>(0);
   const { ref, y } = useSectionParallax(0.22);
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    formOpenedRef.current = Date.now();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const subject = encodeURIComponent(`[${SUBJECTS[type]}] from ${name}`);
-    const body = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\nType: ${SUBJECTS[type]}\n\n${message}`,
-    );
-    window.open(`mailto:llanasnas@gmail.com?subject=${subject}&body=${body}`);
+    if (status === "sending") return;
+    setStatus("sending");
+    setErrorMsg("");
+    const startedAt = Date.now();
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          type: SUBJECTS[type],
+          company,
+          ts: formOpenedRef.current,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || "Send failed");
+      }
+      // Let the transmission animation play a minimum duration
+      const elapsed = Date.now() - startedAt;
+      const wait = Math.max(0, MIN_TRANSMIT_MS - elapsed);
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      setStatus("sent");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err) {
+      const elapsed = Date.now() - startedAt;
+      const wait = Math.max(0, 600 - elapsed);
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      setStatus("error");
+      setErrorMsg(err instanceof Error ? err.message : "Send failed");
+    }
+  }
+
+  function resetForm() {
+    setStatus("idle");
+    setErrorMsg("");
+    formOpenedRef.current = Date.now();
   }
 
   return (
@@ -104,9 +154,9 @@ export function ContactSection() {
             className="chamfer-md border p-6 h-fit backdrop-blur-md"
             style={{
               background: "rgba(20,24,42,0.7)",
-              borderColor: "rgba(251,191,36,0.32)",
+              borderColor: "rgba(251,191,36,0.45)",
               boxShadow:
-                "0 14px 36px -22px rgba(0,0,0,0.6), 0 0 0 1px rgba(251,191,36,0.10)",
+                "0 18px 44px -18px rgba(0,0,0,0.7), 0 0 0 1px rgba(251,191,36,0.14), 0 0 28px rgba(251,191,36,0.22), 0 0 64px rgba(245,158,11,0.18)",
               position: "relative",
               overflow: "hidden",
               color: "var(--fg-1)",
@@ -123,7 +173,8 @@ export function ContactSection() {
                 height: 2,
                 borderRadius: "0 0 4px 4px",
                 background: "var(--rarity-legendary)",
-                boxShadow: "0 0 12px var(--rarity-legendary)",
+                boxShadow:
+                  "0 0 12px var(--rarity-legendary), 0 0 24px rgba(251,191,36,0.55)",
               }}
             />
             <p
@@ -177,8 +228,10 @@ export function ContactSection() {
                     className="chamfer-corner flex items-center justify-center w-8 h-8 shrink-0 text-sm border"
                     style={{
                       background: "rgba(251,191,36,0.08)",
-                      borderColor: "rgba(251,191,36,0.22)",
+                      borderColor: "rgba(251,191,36,0.35)",
                       color: "var(--rarity-legendary)",
+                      boxShadow:
+                        "0 0 10px rgba(251,191,36,0.22), inset 0 0 8px rgba(251,191,36,0.12)",
                     }}
                   >
                     {link.icon.startsWith("/") ? (
@@ -228,7 +281,31 @@ export function ContactSection() {
           </aside>
 
           {/* Form */}
+          <div style={{ position: "relative" }}>
+            {status === "sent" ? (
+              <TransmitSuccess onReset={resetForm} />
+            ) : (
+              <>
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+            {/* Honeypot — hidden from humans, bots will fill it */}
+            <input
+              type="text"
+              name="company"
+              tabIndex={-1}
+              autoComplete="off"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: 1,
+                height: 1,
+                opacity: 0,
+                pointerEvents: "none",
+              }}
+            />
+
             {/* Type tabs */}
             <div className="flex gap-1.5">
               {(["freelance", "job", "message"] as RequestType[]).map((t) => (
@@ -244,10 +321,14 @@ export function ContactSection() {
                         : "rgba(255,255,255,0.03)",
                     borderColor:
                       type === t
-                        ? "rgba(251,191,36,0.4)"
+                        ? "rgba(251,191,36,0.55)"
                         : "var(--glass-stroke)",
                     color:
                       type === t ? "var(--rarity-legendary)" : "var(--fg-3)",
+                    boxShadow:
+                      type === t
+                        ? "0 0 18px rgba(251,191,36,0.32), 0 0 38px rgba(245,158,11,0.22), inset 0 0 12px rgba(251,191,36,0.12)"
+                        : "none",
                   }}
                 >
                   {LABELS[t]}
@@ -270,19 +351,23 @@ export function ContactSection() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border"
+                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-all duration-200 border"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     borderColor: "var(--glass-stroke)",
                     color: "var(--fg-1)",
+                    boxShadow: "0 0 0 1px rgba(251,191,36,0) inset",
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.5)";
+                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.6)";
                     e.currentTarget.style.background = "rgba(251,191,36,0.05)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 16px rgba(251,191,36,0.32), 0 0 36px rgba(245,158,11,0.18), inset 0 0 12px rgba(251,191,36,0.1)";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = "var(--glass-stroke)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 />
               </div>
@@ -299,19 +384,22 @@ export function ContactSection() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border"
+                  className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-all duration-200 border"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     borderColor: "var(--glass-stroke)",
                     color: "var(--fg-1)",
                   }}
                   onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.5)";
+                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.6)";
                     e.currentTarget.style.background = "rgba(251,191,36,0.05)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 16px rgba(251,191,36,0.32), 0 0 36px rgba(245,158,11,0.18), inset 0 0 12px rgba(251,191,36,0.1)";
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = "var(--glass-stroke)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 />
               </div>
@@ -331,7 +419,7 @@ export function ContactSection() {
                 onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={5}
-                className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-colors duration-200 border resize-y"
+                className="chamfer-sm w-full px-3.5 py-2.5 text-sm outline-none transition-all duration-200 border resize-y"
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   borderColor: "var(--glass-stroke)",
@@ -340,12 +428,15 @@ export function ContactSection() {
                   minHeight: 120,
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(251,191,36,0.5)";
+                  e.currentTarget.style.borderColor = "rgba(251,191,36,0.6)";
                   e.currentTarget.style.background = "rgba(251,191,36,0.05)";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 18px rgba(251,191,36,0.3), 0 0 42px rgba(245,158,11,0.18), inset 0 0 14px rgba(251,191,36,0.1)";
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = "var(--glass-stroke)";
                   e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               />
             </div>
@@ -353,28 +444,60 @@ export function ContactSection() {
             {/* Submit */}
             <button
               type="submit"
-              className="chamfer-sm w-full flex items-center justify-center gap-2.5 py-3.5 px-7 font-mono text-[11px] font-bold tracking-[0.16em] uppercase cursor-pointer transition-all duration-200 border-none"
+              disabled={status === "sending"}
+              className="chamfer-sm w-full flex items-center justify-center gap-2.5 py-3.5 px-7 font-mono text-[11px] font-bold tracking-[0.16em] uppercase cursor-pointer transition-all duration-200 border-none disabled:cursor-wait disabled:opacity-70"
               style={{
                 background:
                   "linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #fbbf24 100%)",
                 color: "#0a0c14",
                 boxShadow:
-                  "0 0 22px rgba(251,191,36,0.22), 0 4px 16px rgba(0,0,0,0.4)",
+                  "0 0 28px rgba(251,191,36,0.45), 0 0 64px rgba(245,158,11,0.28), 0 6px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25)",
               }}
               onMouseEnter={(e) => {
+                if (status === "sending") return;
                 e.currentTarget.style.transform = "translateY(-2px)";
                 e.currentTarget.style.boxShadow =
-                  "0 0 38px rgba(251,191,36,0.4), 0 6px 22px rgba(0,0,0,0.5)";
+                  "0 0 48px rgba(251,191,36,0.65), 0 0 96px rgba(245,158,11,0.42), 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.32)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "";
                 e.currentTarget.style.boxShadow =
-                  "0 0 22px rgba(251,191,36,0.22), 0 4px 16px rgba(0,0,0,0.4)";
+                  "0 0 28px rgba(251,191,36,0.45), 0 0 64px rgba(245,158,11,0.28), 0 6px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25)";
               }}
             >
-              Begin Mission <span className="text-sm">↗</span>
+              {status === "sending"
+                ? "Sending…"
+                : status === "sent"
+                  ? "Sent ✓"
+                  : "Begin Mission"}
+              {status === "idle" || status === "error" ? (
+                <span className="text-sm">↗</span>
+              ) : null}
             </button>
+
+            {status === "sent" ? (
+              <p
+                className="font-mono text-[10px] tracking-[0.14em] uppercase"
+                style={{ color: "var(--success)" }}
+                role="status"
+              >
+                ● Mission received — I’ll reply soon
+              </p>
+            ) : null}
+            {status === "error" ? (
+              <p
+                className="font-mono text-[10px] tracking-[0.14em] uppercase"
+                style={{ color: "#ff6b6b" }}
+                role="alert"
+              >
+                ● {errorMsg || "Send failed — try again"}
+              </p>
+            ) : null}
           </form>
+                {status === "sending" ? <TransmitAnimation /> : null}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { TacticalCursor } from "@/components/TacticalCursor";
+import { CookieConsent } from "@/components/cookies/CookieConsent";
+import { GoogleAnalytics } from "@/components/cookies/GoogleAnalytics";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -27,6 +29,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
   twitter: {
     card: "summary_large_image",
     title: "Gerard Llanas Conesa — Full Stack Developer",
@@ -43,10 +48,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <link rel="icon" href="/favicon.ico" sizes="any" />
       <body>
         <TacticalCursor />
         <Header />
         {children}
+        <CookieConsent />
+        <GoogleAnalytics />
       </body>
     </html>
   );

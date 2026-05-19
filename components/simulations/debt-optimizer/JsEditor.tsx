@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
@@ -88,6 +89,7 @@ const rawCount = expenses.reduce((s, e) =>
 );
 if (transfers.length === 0) {
   console.log("  (nothing yet — complete Step 4)");
+  console.log("  Then call sendResponse(transfers) to apply your result to the canvas.");
 } else {
   transfers.forEach(t => {
     const fn = users.find(u => u.id === t.from)?.name || t.from;
@@ -95,6 +97,7 @@ if (transfers.length === 0) {
     console.log(\`  \${fn} → \${tn}: €\${t.amount.toFixed(2)}\`);
   });
   console.log(\`\\n  \${rawCount} raw arrows → \${transfers.length} optimized\`);
+  sendResponse(transfers);
 }
 `;
 
@@ -102,6 +105,30 @@ interface JsEditorProps {
   expenses: Expense[];
   users: UserNode[];
   optimalCount: number | null;
+  hasStarted: boolean;
+  onApplyResponse: (
+    transfers: Array<{ id: string; from: string; to: string; amount: number }>,
+  ) => void;
+  onApplyResponseError: () => void;
+}
+
+function isValidTransfers(
+  v: unknown,
+): v is Array<{ from: string; to: string; amount: number }> {
+  if (!Array.isArray(v)) return false;
+  return v.every((t) => {
+    if (!t || typeof t !== "object") return false;
+    const r = t as Record<string, unknown>;
+    return (
+      typeof r.from === "string" &&
+      r.from.length > 0 &&
+      typeof r.to === "string" &&
+      r.to.length > 0 &&
+      typeof r.amount === "number" &&
+      (r.amount as number) > 0 &&
+      r.from !== r.to
+    );
+  });
 }
 
 interface ConsoleEntry {
@@ -135,13 +162,21 @@ function playAlarm(): void {
   }
 }
 
-export function JsEditor({ expenses, users, optimalCount }: JsEditorProps) {
+export function JsEditor({
+  expenses,
+  users,
+  optimalCount,
+  hasStarted,
+  onApplyResponse,
+  onApplyResponseError,
+}: JsEditorProps) {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [logs, setLogs] = useState<ConsoleEntry[]>([]);
   const [running, setRunning] = useState(false);
   const [userTransferCount, setUserTransferCount] = useState<number | null>(
     null,
   );
+  const [expanded, setExpanded] = useState(false);
   const consoleRef = useRef<HTMLDivElement>(null);
   const [showAlarm, setShowAlarm] = useState(false);
   const alarmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -209,9 +244,41 @@ export function JsEditor({ expenses, users, optimalCount }: JsEditorProps) {
     };
 
     try {
-      // expenses & users passed as named params — available in user code without declaration
-      const fn = new Function("console", "expenses", "users", code);
-      fn(mockConsole, expData, usrData);
+      const sendResponseFn = (transfersArg: unknown): void => {
+        if (!isValidTransfers(transfersArg)) {
+          captured.push({
+            id: _entryId++,
+            text: "[sendResponse ERROR] Invalid format. Expected: [{ from: string, to: string, amount: number }, ...]. +1 penalty move applied.",
+            type: "error",
+          });
+          onApplyResponseError();
+          return;
+        }
+        const mapped = (
+          transfersArg as Array<{ from: string; to: string; amount: number }>
+        ).map((t, i) => ({
+          id: `sr-${Date.now()}-${i}`,
+          from: t.from,
+          to: t.to,
+          amount: Math.round(t.amount * 100) / 100,
+        }));
+        onApplyResponse(mapped);
+        captured.push({
+          id: _entryId++,
+          text: `[sendResponse OK] ${mapped.length} transfer(s) applied to canvas. +1 move counted.`,
+          type: "log",
+        });
+      };
+
+      // expenses, users & sendResponse passed as named params — available in user code
+      const fn = new Function(
+        "console",
+        "expenses",
+        "users",
+        "sendResponse",
+        code,
+      );
+      fn(mockConsole, expData, usrData, sendResponseFn);
       setLogs(captured);
 
       // Capture user's 'transfers' variable to compute efficiency
@@ -223,10 +290,17 @@ export function JsEditor({ expenses, users, optimalCount }: JsEditorProps) {
           "console",
           "expenses",
           "users",
+          "sendResponse",
           "__c__",
           wrapped,
         );
-        fn2(hc, expData, usrData, (a: unknown[]) => cap.push(...a));
+        fn2(
+          hc,
+          expData,
+          usrData,
+          () => {},
+          (a: unknown[]) => cap.push(...a),
+        );
         setUserTransferCount(cap.length > 0 ? cap.length : null);
       } catch {
         setUserTransferCount(null);
@@ -247,130 +321,223 @@ export function JsEditor({ expenses, users, optimalCount }: JsEditorProps) {
           consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
       }, 50);
     }
-  }, [code, expData, usrData]);
+  }, [code, expData, usrData, onApplyResponse, onApplyResponseError]);
 
   const efficiency =
     userTransferCount !== null && optimalCount !== null && optimalCount > 0
       ? Math.min(100, Math.round((optimalCount / userTransferCount) * 100))
       : null;
 
-  return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        <span className={styles.headerTitle}>{"// greedy_protocol.js"}</span>
-        <div className={styles.headerActions}>
-          <button
-            className={styles.resetBtn}
-            onClick={() => {
-              setCode(DEFAULT_CODE);
-              setLogs([]);
-              setUserTransferCount(null);
-            }}
-            title="Reset to default"
-          >
-            ↺ reset
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={styles.editorWrap}
-        onPaste={(e) => {
-          e.preventDefault();
-          triggerAlarm();
-        }}
-      >
-        <Editor
-          value={code}
-          onValueChange={setCode}
-          highlight={highlight}
-          padding={14}
-          textareaClassName={styles.editorTextarea}
-          preClassName={styles.editorPre}
-          className={styles.editorInner}
-          tabSize={2}
-        />
-      </div>
-
-      <div className={styles.runBar}>
-        <GlowButton
-          variant="primary"
-          size="sm"
-          onClick={runCode}
-          disabled={running}
-        >
-          ▶ Run
-        </GlowButton>
+  // ── Shared JSX fragments ─────────────────────────────────────────
+  const headerBar = (
+    <div className={styles.header}>
+      <span className={styles.headerTitle}>{"// greedy_protocol.js"}</span>
+      <div className={styles.headerActions}>
         <button
-          className={styles.clearBtn}
+          className={styles.resetBtn}
           onClick={() => {
+            setCode(DEFAULT_CODE);
             setLogs([]);
             setUserTransferCount(null);
           }}
+          title="Reset to default"
         >
-          Clear console
+          ↺ reset
         </button>
-        {userTransferCount !== null && (
-          <span className={styles.result}>
-            Your solution: <strong>{userTransferCount}</strong> transfers
-            {optimalCount !== null && (
-              <>
-                {" "}
-                · Optimal: <strong>{optimalCount}</strong>
-                {efficiency !== null && (
-                  <span
-                    className={`${styles.efficiency} ${efficiency === 100 ? styles.efficiencyPerfect : ""}`}
-                  >
-                    {" "}
-                    · {efficiency}% efficient
-                  </span>
-                )}
-              </>
-            )}
-          </span>
-        )}
-      </div>
-
-      <div className={styles.console} ref={consoleRef} aria-live="polite">
-        {logs.length === 0 ? (
-          <span className={styles.consolePlaceholder}>
-            {">"} awaiting execution...
-          </span>
-        ) : (
-          logs.map((entry) => (
-            <div
-              key={entry.id}
-              className={`${styles.logLine} ${styles[`logLine_${entry.type}`]}`}
-            >
-              <span className={styles.logPrompt}>{">"}</span>
-              <span className={styles.logText}>{entry.text}</span>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* ── Anti-paste alarm ──────────────────────────── */}
-      {showAlarm && (
-        <div
-          className={styles.alarmOverlay}
-          onClick={() => setShowAlarm(false)}
-          role="alert"
-          aria-live="assertive"
+        <button
+          className={styles.expandBtn}
+          onClick={() => setExpanded((v) => !v)}
+          title={expanded ? "Collapse editor" : "Expand editor"}
+          aria-label={expanded ? "Collapse editor" : "Expand editor"}
         >
-          <div className={styles.alarmContent}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/assets/angry_me.png"
-              alt="No AI allowed"
-              className={styles.alarmImg}
+          {expanded ? "✕" : "⛶"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const editorBody = (
+    <>
+      {!hasStarted ? (
+        <div className={styles.lockScreen}>
+          <span className={styles.lockIcon}>⬛</span>
+          <p className={styles.lockMsg}>
+            Press <strong>START</strong> in the canvas to activate the editor
+          </p>
+          <p className={styles.lockSub}>
+            The code editor unlocks once the simulation begins
+          </p>
+        </div>
+      ) : (
+        <>
+          <div
+            className={styles.editorWrap}
+            onPaste={(e) => {
+              e.preventDefault();
+              triggerAlarm();
+            }}
+          >
+            <Editor
+              value={code}
+              onValueChange={setCode}
+              highlight={highlight}
+              padding={14}
+              textareaClassName={styles.editorTextarea}
+              preClassName={styles.editorPre}
+              className={styles.editorInner}
+              tabSize={2}
             />
-            <p className={styles.alarmTitle}>&#9888; AI DETECTED &#9888;</p>
-            <p className={styles.alarmSub}>Paste injection blocked.</p>
-            <p className={styles.alarmSub}>Write the code yourself, operator.</p>
-            <p className={styles.alarmDismiss}>[ click to clear alert ]</p>
+          </div>
+
+          <div className={styles.runBar}>
+            <GlowButton
+              variant="primary"
+              size="sm"
+              onClick={runCode}
+              disabled={running}
+            >
+              ▶ Run
+            </GlowButton>
+            <button
+              className={styles.clearBtn}
+              onClick={() => {
+                setLogs([]);
+                setUserTransferCount(null);
+              }}
+            >
+              Clear console
+            </button>
+            {userTransferCount !== null && (
+              <span className={styles.result}>
+                Your solution: <strong>{userTransferCount}</strong> transfers
+                {optimalCount !== null && (
+                  <>
+                    {" "}
+                    · Optimal: <strong>{optimalCount}</strong>
+                    {efficiency !== null && (
+                      <span
+                        className={`${styles.efficiency} ${efficiency === 100 ? styles.efficiencyPerfect : ""}`}
+                      >
+                        {" "}
+                        · {efficiency}% efficient
+                      </span>
+                    )}
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+
+          <div className={styles.console} ref={consoleRef} aria-live="polite">
+            {logs.length === 0 ? (
+              <span className={styles.consolePlaceholder}>
+                {">"} awaiting execution...
+              </span>
+            ) : (
+              logs.map((entry) => (
+                <div
+                  key={entry.id}
+                  className={`${styles.logLine} ${styles[`logLine_${entry.type}`]}`}
+                >
+                  <span className={styles.logPrompt}>{">"}</span>
+                  <span className={styles.logText}>{entry.text}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </>
+  );
+
+  const alarmJsx = showAlarm ? (
+    <div
+      className={styles.alarmOverlay}
+      onClick={() => setShowAlarm(false)}
+      role="alert"
+      aria-live="assertive"
+    >
+      <div className={styles.alarmContent}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/angry_me.png"
+          alt="No AI allowed"
+          className={styles.alarmImg}
+        />
+        <p className={styles.alarmTitle}>&#9888; AI DETECTED &#9888;</p>
+        <p className={styles.alarmSub}>Paste injection blocked.</p>
+        <p className={styles.alarmSub}>Write the code yourself, operator.</p>
+        <p className={styles.alarmDismiss}>[ click to clear alert ]</p>
+      </div>
+    </div>
+  ) : null;
+
+  // ── Render ───────────────────────────────────────────────────────
+  return (
+    <>
+      {/* API info panel — shown above editor once started */}
+      {hasStarted && (
+        <div className={styles.apiPanel}>
+          <div className={styles.apiPanelHeader}>
+            <span className={styles.apiPanelTag}>API</span>
+            <span className={styles.apiPanelTitle}>sendResponse( )</span>
+            <span className={styles.apiPanelSubtitle}>
+              — submit your solution to the canvas
+            </span>
+          </div>
+
+          <code className={styles.apiPanelSig}>
+            {"sendResponse([ { from, to, amount }, ... ])"}
+          </code>
+
+          <div className={styles.apiPanelRow}>
+            <span className={styles.apiPanelLabel}>USERS</span>
+            <div className={styles.apiPanelBadges}>
+              {users.map((u) => (
+                <span key={u.id} className={styles.apiPanelBadge}>
+                  <span className={styles.apiBadgeName}>{u.name}</span>
+                  <span className={styles.apiBadgeId}>{u.id}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.apiPanelWarns}>
+            <span className={styles.apiPanelWarnA}>
+              <span className={styles.warnIcon}>↺</span>
+              replaces ALL canvas transfers · +1 move per call
+            </span>
+            <span className={styles.apiPanelWarnB}>
+              <span className={styles.warnIcon}>✕</span>
+              invalid format → canvas unchanged · +1 penalty move
+            </span>
           </div>
         </div>
       )}
-    </div>
+
+      {/* Normal (collapsed) container — always in DOM */}
+      <div className={styles.root}>
+        {headerBar}
+        {expanded ? (
+          <div className={styles.expandedPlaceholder}>
+            <span>{"// editor in fullscreen mode"}</span>
+          </div>
+        ) : (
+          editorBody
+        )}
+        {!expanded && alarmJsx}
+      </div>
+
+      {/* Fullscreen portal — bypasses any parent stacking context */}
+      {expanded &&
+        createPortal(
+          <div className={styles.expandedOverlay}>
+            {headerBar}
+            {editorBody}
+            {alarmJsx}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

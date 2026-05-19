@@ -24,6 +24,7 @@ import { useEffect, useState, useCallback } from "react";
 import styles from "./HeroComponent.module.css";
 import HoloSocials from "./HoloSocials";
 import HeroMobile from "./HeroMobile";
+import TabletAbsorption from "./TabletAbsorption";
 import { CODE_LINES, stripHtml, renderPartial } from "@/lib/heroCode";
 
 interface HeroComponentProps {
@@ -33,6 +34,8 @@ interface HeroComponentProps {
   onEnterLaptop?: () => void;
   /** Called when the tablet code surface is activated (SYSTEM SIMULATIONS). */
   onEnterTablet?: () => void;
+  /** Called when the Projects CTA (mobile only) is activated. */
+  onEnterProjects?: () => void;
   /** Override the room background image (public/ relative). Default: /assets/room.png */
   photoSrc?: string;
 }
@@ -247,10 +250,12 @@ export default function HeroComponent({
   onEnterArchive,
   onEnterLaptop,
   onEnterTablet,
+  onEnterProjects,
   photoSrc = "/assets/room.png",
 }: HeroComponentProps) {
   const [time, setTime] = useState<Date | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [absorbing, setAbsorbing] = useState(false);
 
   // Defer the clock until mount so SSR doesn't mismatch.
   useEffect(() => {
@@ -278,22 +283,43 @@ export default function HeroComponent({
   }, [onEnterLaptop, onEnterArchive]);
 
   const enterTablet = useCallback(() => {
+    if (absorbing) return;
     const fn = onEnterTablet ?? onEnterArchive;
-    if (fn) {
-      fn();
-    } else {
+    if (!fn) {
       console.info("[Hero] onEnterTablet not provided — wire to your router.");
+      return;
     }
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      fn();
+      return;
+    }
+    setAbsorbing(true);
+  }, [absorbing, onEnterTablet, onEnterArchive]);
+
+  const handleAbsorptionPush = useCallback(() => {
+    const fn = onEnterTablet ?? onEnterArchive;
+    fn?.();
   }, [onEnterTablet, onEnterArchive]);
+
+  const handleAbsorptionComplete = useCallback(() => {
+    setAbsorbing(false);
+  }, []);
 
   const hh = time ? String(time.getHours()).padStart(2, "0") : "--";
   const mm = time ? String(time.getMinutes()).padStart(2, "0") : "--";
 
   if (isMobile) {
+    // Mobile skips the tablet-absorption animation (slide handled inside HeroMobile)
+    const enterSimulationsMobile = () =>
+      (onEnterTablet ?? onEnterArchive)?.();
     return (
       <HeroMobile
         onEnterArchive={enterLaptop}
-        onEnterSimulations={enterTablet}
+        onEnterSimulations={enterSimulationsMobile}
+        onEnterProjects={onEnterProjects}
       />
     );
   }
@@ -324,6 +350,12 @@ export default function HeroComponent({
         </span>
         <span style={{ color: "var(--fg-4, #5a6082)" }}>· BCN</span>
       </div>
+      {absorbing && (
+        <TabletAbsorption
+          onPush={handleAbsorptionPush}
+          onComplete={handleAbsorptionComplete}
+        />
+      )}
     </div>
   );
 }

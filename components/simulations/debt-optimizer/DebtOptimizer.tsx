@@ -11,6 +11,7 @@ import { ExpenseList } from "./ExpenseList";
 import { JsEditor } from "./JsEditor";
 import { RunControls } from "./RunControls";
 import { ScoreSubmit } from "./ScoreSubmit";
+import type { Transfer } from "@/lib/simulations/debt-optimizer";
 import { initState, reducer } from "./state";
 import styles from "./DebtOptimizer.module.css";
 
@@ -30,7 +31,7 @@ export default function DebtOptimizer() {
   const [hydrated, setHydrated] = useState(false);
   const [state, dispatch] = useReducer(reducer, seed, initState);
   const [showSubmit, setShowSubmit] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
 
   // After mount: pick a real random seed and reset so the user gets variety.
@@ -140,6 +141,20 @@ export default function DebtOptimizer() {
     setSeed(fresh);
     dispatch({ type: "RESET", seed: fresh });
     setShowSubmit(false);
+    setHasStarted(false);
+  }, []);
+  const handleStart = useCallback(() => {
+    setHasStarted(true);
+    dispatch({ type: "START" });
+  }, []);
+  const handleApplyResponse = useCallback((transfers: Transfer[]) => {
+    dispatch({ type: "APPLY_RESPONSE", transfers });
+  }, []);
+  const handleApplyResponseError = useCallback(() => {
+    dispatch({ type: "APPLY_RESPONSE_ERROR" });
+  }, []);
+  const handleResetToInitial = useCallback(() => {
+    dispatch({ type: "RESET_TO_INITIAL" });
   }, []);
 
   // Transfer count per expense (for ExpenseList badge)
@@ -153,6 +168,23 @@ export default function DebtOptimizer() {
 
   const [showExpenses, setShowExpenses] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  // Real-time timer: tick every 100ms while playing, freeze on complete, reset on new run
+  useEffect(() => {
+    if (!state.startedAt) {
+      setElapsedMs(0); // eslint-disable-line react-hooks/set-state-in-effect
+      return;
+    }
+    if (state.finishedAt) {
+      setElapsedMs(state.finishedAt - state.startedAt);
+      return;
+    }
+    const id = setInterval(() => {
+      setElapsedMs(performance.now() - state.startedAt!);
+    }, 100);
+    return () => clearInterval(id);
+  }, [state.startedAt, state.finishedAt]);
 
   return (
     <div className={styles.root}>
@@ -184,83 +216,108 @@ export default function DebtOptimizer() {
 
             <div className={styles.modalBody}>
               <section className={styles.modalSection}>
-                <h3 className={styles.modalSectionTitle}>
-                  // What it simulates
-                </h3>
+                <h3 className={styles.modalSectionTitle}>{"// The challenge"}</h3>
                 <p>
                   A group of people share expenses — dinners, trips,
-                  subscriptions. Each person may have paid for others, creating
-                  a web of debts. The goal is to settle everyone&apos;s balance
-                  with as <strong>few money transfers as possible</strong>.
-                </p>
-                <p>
-                  Think Splitwise, but exposed: you can see and edit every raw
-                  debt arrow before the algorithm resolves them.
+                  subscriptions. Every payment creates raw debt arrows from
+                  payer to each beneficiary. Your mission: write the greedy
+                  algorithm that collapses all these arrows into the{" "}
+                  <strong>minimum possible transfers</strong>.
                 </p>
               </section>
 
               <section className={styles.modalSection}>
-                <h3 className={styles.modalSectionTitle}>// Your mission</h3>
+                <h3 className={styles.modalSectionTitle}>
+                  {"// Your tool: the JS editor"}
+                </h3>
+                <p>
+                  Scroll down to the code editor. Steps&nbsp;1–3 are already
+                  implemented — they accumulate debts, compute net balances,
+                  and split users into creditors and debtors.
+                </p>
                 <ul className={styles.modalList}>
                   <li>
-                    The canvas shows one arrow per expense between each payer
-                    and beneficiary.
+                    <strong>expenses</strong> and <strong>users</strong> are
+                    injected automatically — no imports needed.
                   </li>
                   <li>
-                    <strong>Delete</strong> redundant arrows,{" "}
-                    <strong>reroute</strong> them, or <strong>add</strong> new
-                    ones to pre-simplify the graph.
+                    Implement <strong>Step&nbsp;4</strong>: the greedy
+                    two-pointer loop that matches the largest debtor with the
+                    largest creditor.
                   </li>
                   <li>
-                    When ready, hit <strong>EXECUTE PROTOCOL</strong> — the
-                    greedy algorithm finalizes the solution.
+                    Call{" "}
+                    <code className={styles.modalCode}>sendResponse(transfers)</code>{" "}
+                    with an array of{" "}
+                    <code className={styles.modalCode}>
+                      {"{ from, to, amount }"}
+                    </code>{" "}
+                    objects to push your result to the canvas.
                   </li>
-                  <li>The fewer transfers remain, the better your score.</li>
+                  <li>
+                    Hit <strong>EXECUTE PROTOCOL</strong> to run the reference
+                    solution and compare.
+                  </li>
                 </ul>
               </section>
 
               <section className={styles.modalSection}>
                 <h3 className={styles.modalSectionTitle}>
-                  // The algorithm (steps 01–04)
+                  {"// The algorithm"}
                 </h3>
                 <ul className={styles.modalList}>
                   <li>
-                    <strong>01 Accumulate</strong> — sum all debts per expense.
+                    <strong>01 Accumulate</strong> — sum paid / owed per user
+                    across all expenses.
                   </li>
                   <li>
-                    <strong>02 Net balance</strong> — collapse per-expense debts
-                    into one net balance per person.
+                    <strong>02 Net balance</strong> — one number per person:
+                    positive = creditor, negative = debtor.
                   </li>
                   <li>
-                    <strong>03 Partition</strong> — split into creditors
-                    (positive) and debtors (negative).
+                    <strong>03 Partition &amp; sort</strong> — two sorted
+                    lists: creditors (desc) and debtors (asc by balance).
                   </li>
                   <li>
-                    <strong>04 Sort</strong> — order both lists by absolute
-                    amount.
-                  </li>
-                  <li>
-                    <strong>05 Greedy</strong> — your JS code runs here: match
-                    the largest debtor to the largest creditor, repeat until
-                    balanced.
+                    <strong>04 Greedy loop ← your task</strong> — take the top
+                    of each list, transfer{" "}
+                    <code className={styles.modalCode}>
+                      min(credit, |debt|)
+                    </code>
+                    , reduce both balances, remove whoever hits&nbsp;0. Repeat
+                    until both lists are empty.
                   </li>
                 </ul>
               </section>
 
               <section className={styles.modalSection}>
-                <h3 className={styles.modalSectionTitle}>// Scoring</h3>
+                <h3 className={styles.modalSectionTitle}>
+                  {"// sendResponse(transfers)"}
+                </h3>
+                <div className={styles.modalCallout}>
+                  Call this function inside the editor with your computed array.
+                  Each entry needs <strong>from</strong> (userId),{" "}
+                  <strong>to</strong> (userId), and <strong>amount</strong>{" "}
+                  (number &gt;&nbsp;0). The canvas updates in real time. You can
+                  call it multiple times — each call counts as one move.
+                </div>
+              </section>
+
+              <section className={styles.modalSection}>
+                <h3 className={styles.modalSectionTitle}>{"// Scoring"}</h3>
                 <ul className={styles.modalList}>
                   <li>
-                    <strong>Efficiency</strong> — ratio of optimal transfers to
-                    your manual count. Fewer arrows = higher score.
+                    <strong>Efficiency</strong> — your transfer count vs the
+                    optimal. Fewer transfers = higher score.
                   </li>
                   <li>
-                    <strong>Speed</strong> — time elapsed from first edit to
-                    execution.
+                    <strong>Speed</strong> — time elapsed from START to
+                    EXECUTE.
                   </li>
                   <li>
-                    <strong>Moves</strong> — total reroutes, deletes and adds
-                    you made.
+                    <strong>Moves</strong> — how many times{" "}
+                    <code className={styles.modalCode}>sendResponse()</code>{" "}
+                    was called.
                   </li>
                 </ul>
                 <p>
@@ -281,7 +338,13 @@ export default function DebtOptimizer() {
             onClick={() => setShowInstructions(true)}
             aria-label="Show simulation instructions"
           >
-            ?
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <rect x="1.5" y="1.5" width="11" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M4 4.5h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M4 7h6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M4 9.5h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            Read Brief
           </button>
         </div>
       </HoloPanel>
@@ -319,7 +382,7 @@ export default function DebtOptimizer() {
           <strong>{"// brief."}</strong>{" "}
           {state.selectedExpenseId
             ? `Showing arrows for expense ${state.selectedExpenseId} · click expense again to deselect`
-            : `${state.manualTransfers.length} raw arrows from ${state.input.expenses.length} group expenses · delete, reroute, or add · then run the protocol`}
+            : `${state.manualTransfers.length} raw arrows from ${state.input.expenses.length} group expenses · press START · implement the algorithm · call sendResponse() · then execute`}
         </p>
       </HoloPanel>
 
@@ -335,7 +398,11 @@ export default function DebtOptimizer() {
         onAddTransfer={handleAddTransfer}
         optimal={showOptimal}
         netByUser={netByUser}
-        canEdit={!showOptimal}
+        canEdit={false}
+        hasStarted={hasStarted}
+        isComplete={showOptimal}
+        onStart={handleStart}
+        onResetToInitial={handleResetToInitial}
       />
 
       <RunControls
@@ -345,6 +412,7 @@ export default function DebtOptimizer() {
         manualCount={state.manualTransfers.length}
         manualMoves={state.manualMoves}
         optimalCount={state.result?.transfers.length ?? null}
+        elapsedMs={elapsedMs}
         canRun={
           state.runState !== "phase-playback" && state.runState !== "complete"
         }
@@ -357,6 +425,9 @@ export default function DebtOptimizer() {
         expenses={state.input.expenses}
         users={state.input.users}
         optimalCount={state.result?.transfers.length ?? null}
+        hasStarted={hasStarted}
+        onApplyResponse={handleApplyResponse}
+        onApplyResponseError={handleApplyResponseError}
       />
 
       {showSubmit && breakdown && stats ? (
@@ -366,7 +437,7 @@ export default function DebtOptimizer() {
           breakdown={breakdown}
           stats={stats}
           onClose={() => setShowSubmit(false)}
-          onSubmitted={() => setRefreshKey((k) => k + 1)}
+          onSubmitted={() => {}}
         />
       ) : null}
     </div>

@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import AboutContent from "./components/AboutContent";
+import { NeuralInterpreter } from "@/components/intelligence/NeuralInterpreter";
 
 export const metadata: Metadata = {
   title: "About — Gerard Llanas Conesa",
   description:
-    "Full Stack Developer & AI-Integrated Engineer. Learn more about Gerard Llanas Conesa, his background, values, and approach to software development.",
+    "Full Stack AI Engineer & LLM Application Developer based in Barcelona. 7+ years building production AI-native web and mobile applications.",
 };
 
 export default function AboutPage() {
-  return <AboutContent />;
+  return (
+    <>
+      <AboutContent />
+      <NeuralInterpreter />
+    </>
+  );
 }

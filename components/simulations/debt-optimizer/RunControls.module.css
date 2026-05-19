@@ -6,7 +6,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -69,9 +69,33 @@
 
 @media (max-width: 760px) {
   .stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   .seedBadge {
     margin-left: 0;
   }
+}
+
+/* ── Live timer tile ─────────────────────────────── */
+@keyframes timerPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(90, 215, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(90, 215, 255, 0.18);
+  }
+}
+
+.statTileTimer {
+  border-color: rgba(90, 215, 255, 0.28);
+  animation: timerPulse 1s infinite;
+}
+
+.statTileDone {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.statValueTimer {
+  color: var(--accent-cyan);
 }

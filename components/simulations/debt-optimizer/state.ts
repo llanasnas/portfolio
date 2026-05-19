@@ -37,6 +37,10 @@ export type Action =
   | { type: "DELETE_TRANSFER"; id: string }
   | { type: "DELETE_ALL_TRANSFERS" }
   | { type: "ADD_TRANSFER"; from: string; to: string; amount: number }
+  | { type: "START" }
+  | { type: "APPLY_RESPONSE"; transfers: Transfer[] }
+  | { type: "APPLY_RESPONSE_ERROR" }
+  | { type: "RESET_TO_INITIAL" }
   | { type: "RUN_GREEDY" }
   | { type: "STEP_PHASE" }
   | { type: "COMPLETE" }
@@ -66,6 +70,10 @@ export function reducer(state: State, action: Action): State {
     case "INIT":
     case "RESET":
       return initState(action.seed);
+
+    case "START":
+      if (state.startedAt !== null) return state;
+      return { ...state, startedAt: performance.now(), runState: "manual" };
 
     case "SELECT_TRANSFER":
       return { ...state, selectedTransferId: action.id };
@@ -144,6 +152,37 @@ export function reducer(state: State, action: Action): State {
         manualMoves: state.manualMoves + 1,
         runState: "manual",
         startedAt: state.startedAt ?? performance.now(),
+        selectedTransferId: null,
+      };
+    }
+
+    case "APPLY_RESPONSE": {
+      if (state.runState === "phase-playback" || state.runState === "complete") return state;
+      const now = performance.now();
+      return {
+        ...state,
+        manualTransfers: action.transfers,
+        manualMoves: state.manualMoves + 1,
+        runState: "manual",
+        startedAt: state.startedAt ?? now,
+        selectedTransferId: null,
+      };
+    }
+
+    case "APPLY_RESPONSE_ERROR": {
+      const now = performance.now();
+      return {
+        ...state,
+        manualMoves: state.manualMoves + 1,
+        startedAt: state.startedAt ?? now,
+      };
+    }
+
+    case "RESET_TO_INITIAL": {
+      if (state.runState === "phase-playback" || state.runState === "complete") return state;
+      return {
+        ...state,
+        manualTransfers: state.initialTransfers.map((t) => ({ ...t })),
         selectedTransferId: null,
       };
     }

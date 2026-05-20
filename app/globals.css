@@ -238,6 +238,7 @@ body {
   transform-style: preserve-3d;
   pointer-events: none;
   color: var(--ring-color, #5ad7ff);
+  will-change: transform, opacity;
 }
 .cv-ring__c {
   position: absolute;
@@ -478,9 +479,8 @@ body {
   }
   .cv-ring__c {
     border-width: 2px;
-    box-shadow:
-      0 0 12px currentColor,
-      0 0 28px color-mix(in srgb, currentColor 55%, transparent);
+    /* Remove color-mix() — too expensive for mobile GPU inside 3D context */
+    box-shadow: 0 0 10px currentColor;
   }
 }
 

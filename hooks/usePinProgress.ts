@@ -24,11 +24,18 @@ export function usePinProgress(): [number, boolean] {
 
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", update);
+    // Debounce resize to absorb mobile URL-bar show/hide bounces
+    let resizeTimer = 0;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(update, 200);
+    };
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("resize", onResize);
       cancelAnimationFrame(raf);
+      clearTimeout(resizeTimer);
     };
   }, []);
 

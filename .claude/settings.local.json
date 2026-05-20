@@ -16,7 +16,8 @@
       "Bash(pdftotext *)",
       "Bash(npm install *)",
       "Bash(npx eslint *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "mcp__codegraph__codegraph_files"
     ]
   }
 }

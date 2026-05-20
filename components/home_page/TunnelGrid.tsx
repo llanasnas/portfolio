@@ -1,56 +1,56 @@
 "use client";
 
-import { type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
-interface TunnelGridProps {
-  mPos: number;
-}
+const RING_COUNT_DESKTOP = 11;
+// 5 rings × 2 concentric children = 10 composited layers on mobile;
+// 4 rings = 8 layers, ~20% less compositor work without losing depth read.
+const RING_COUNT_MOBILE = 4;
 
-const RING_COUNT = 14;
-const GAP = 1100;
-const PASS_HIDE_Z = 1300; // hide beyond this (safe below perspective)
-const PASS_FADE_FROM = 500; // fade between fade-from and hide
-
+// Cohesive cyberpunk palette — violets + blues + yellow + red accents.
+// No greens, no oranges (user-requested).
 const RING_COLORS = [
   "#5ad7ff", // cyan
-  "#ff2dcf", // magenta
-  "#b5ff5a", // lime
   "#b87bff", // violet
-  "#ffb35a", // amber
-  "#5af7c5", // teal
-  "#ff5a8a", // pink
+  "#ff4d5e", // red
+  "#6aa6ff", // blue
+  "#fbbf24", // yellow
+  "#a48bff", // soft violet
+  "#ff2d4d", // deep red
+  "#8b7bff", // indigo
 ];
 
-function ringStyle(i: number, mPos: number): CSSProperties {
-  const z = mPos * GAP - (i + 2) * GAP;
-  const color = RING_COLORS[i % RING_COLORS.length];
+/**
+ * Presentational tunnel rings. Z-translation + opacity along scroll are
+ * driven by the master GSAP timeline mounted in HomeClient (which targets
+ * `[data-tunnel-ring]` inside `.tunnel-grid`). This component renders the
+ * static DOM + per-ring color only; no per-frame React updates.
+ */
+export function TunnelGrid() {
+  const [ringCount, setRingCount] = useState(RING_COUNT_DESKTOP);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px), (pointer: coarse)");
+    const apply = (matches: boolean) =>
+      setRingCount(matches ? RING_COUNT_MOBILE : RING_COUNT_DESKTOP);
+    apply(mq.matches);
+    const handler = (e: MediaQueryListEvent) => apply(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
-  if (z >= PASS_HIDE_Z) {
-    // Past camera — park far back at unique Z (avoid layer overlap + recreation)
-    return {
-      "--ring-color": color,
-      transform: `translate3d(-50%, -50%, ${-40000 - i * 200}px)`,
-      opacity: 0,
-    } as CSSProperties;
-  }
-
-  let opacity = 1;
-  if (z > PASS_FADE_FROM) {
-    opacity = (PASS_HIDE_Z - z) / (PASS_HIDE_Z - PASS_FADE_FROM);
-  }
-
-  return {
-    "--ring-color": color,
-    transform: `translate3d(-50%, -50%, ${z}px)`,
-    opacity,
-  } as CSSProperties;
-}
-
-export function TunnelGrid({ mPos }: TunnelGridProps) {
   return (
     <div className="tunnel-grid" aria-hidden="true">
-      {Array.from({ length: RING_COUNT }).map((_, i) => (
-        <div key={i} className="cv-ring" style={ringStyle(i, mPos)}>
+      {Array.from({ length: ringCount }).map((_, i) => (
+        <div
+          key={i}
+          className="cv-ring"
+          data-tunnel-ring={i}
+          style={
+            {
+              "--ring-color": RING_COLORS[i % RING_COLORS.length],
+            } as CSSProperties
+          }
+        >
           <div className="cv-ring__c cv-ring__c--1" />
           <div className="cv-ring__c cv-ring__c--2" />
         </div>

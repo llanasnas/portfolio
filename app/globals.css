@@ -476,14 +476,32 @@ body {
   .cv-ring {
     width: 62vh;
     height: 62vh;
-    /* Use dvh so rings scale with the dynamic viewport (address-bar-aware) */
-    width: 62dvh;
-    height: 62dvh;
+    /* svh keeps rings centred against the stable visible viewport
+       (which is also 100svh) instead of jittering with the bar. */
+    width: 62svh;
+    height: 62svh;
+    /* Drop forced layer promotion — animations are off on mobile, so
+       keeping every ring on its own GPU layer just wastes VRAM. */
+    will-change: auto;
   }
   .cv-ring__c {
     border-width: 2px;
-    /* Remove color-mix() — too expensive for mobile GPU inside 3D context */
-    box-shadow: 0 0 10px currentColor;
+    /* The blur radius is the biggest single mobile GPU cost in this
+       page — 10 ring layers × 10px blur shadow rasterized every frame.
+       Cut to a 3px halo: still reads as neon, ~4× cheaper to composite. */
+    box-shadow: 0 0 3px currentColor;
+    opacity: 0.78;
+  }
+  /* Halt 28 infinite 3D rotation animations on mobile — they were the
+     main GPU bottleneck and the source of the choppy/torn rendering. */
+  .cv-ring__c--1,
+  .cv-ring__c--2 {
+    animation: none;
+  }
+  /* Particle dust = 10 extra composited layers animating forever.
+     Off on mobile to keep the compositor free for the timeline cards. */
+  .cv-dust {
+    display: none;
   }
 }
 
@@ -491,16 +509,20 @@ body {
 .pin-shell {
   position: relative;
   height: 800vh;
+  /* Use small-viewport units so the scroll length stays stable while the
+     mobile address bar shows/hides — otherwise both .pin-shell (vh) and
+     .pin-stage (dvh) would shift on every bar toggle, causing flicker. */
+  height: 800svh;
   width: 100%;
 }
 .pin-stage {
   position: sticky;
   top: 0;
   height: 100vh;
-  /* Use dynamic viewport height on mobile so the stage fills exactly the
-     visible area — prevents rings from appearing off-centre when the
-     browser's address bar is visible */
-  height: 100dvh;
+  /* svh = smallest stable viewport. Stage always fits the visible area
+     even when the address bar is shown, and doesn't resize when the bar
+     hides — which fixes the visible jumping/disappearing on mobile. */
+  height: 100svh;
   width: 100%;
   overflow: hidden;
   z-index: 1;
@@ -1161,25 +1183,35 @@ body {
   --type-accent-rgb: 251, 191, 36;
 }
 
+/* ---- Holographic panel card ---- */
 .mslide {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 440px;
-  height: 460px;
+  width: 460px;
+  height: auto;
+  min-height: 320px;
   transform-origin: center center;
-  background: linear-gradient(
-    180deg,
-    rgba(14, 18, 32, 0.98) 0%,
-    rgba(8, 10, 18, 0.99) 100%
-  );
-  border: 1px solid rgba(var(--type-accent-rgb), 0.22);
-  box-shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.7);
-  padding: 28px;
+  background:
+    radial-gradient(
+      120% 60% at 100% 0%,
+      rgba(var(--type-bg-rgb, 106, 166, 255), 0.16) 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(12, 16, 28, 0.92) 0%,
+      rgba(6, 8, 16, 0.97) 100%
+    );
+  border: 1px solid rgba(var(--type-accent-rgb), 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--type-accent-rgb), 0.06),
+    0 18px 44px -22px rgba(0, 0, 0, 0.7);
+  /* padding lives on .mslide__inner so the slice clip-path can cut from
+     edge to edge without leaving a padding gutter. */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* chamfered corners — match HUD frame language */
   clip-path: polygon(
     0 0,
     calc(100% - 14px) 0,
@@ -1188,276 +1220,289 @@ body {
     14px 100%,
     0 calc(100% - 14px)
   );
-  will-change: transform;
-  transition:
-    box-shadow 350ms var(--ease-out),
-    border-color 350ms var(--ease-out);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  /* Transition on shadow/border caused repaint storms during scroll —
+     the active card switches between siblings every milestone. Drop it. */
 }
 .mslide.is-active {
-  border-color: rgba(var(--type-accent-rgb), 0.55);
+  border-color: rgba(var(--type-accent-rgb), 0.6);
   box-shadow:
-    0 0 0 1px rgba(var(--type-accent-rgb), 0.28),
+    inset 0 0 0 1px rgba(var(--type-accent-rgb), 0.22),
     0 0 48px rgba(var(--type-accent-rgb), 0.22),
-    0 0 96px rgba(var(--type-accent-rgb), 0.12),
-    inset 2px 0 0 var(--type-accent);
-}
-@media (max-width: 760px), (pointer: coarse) {
-  .mslide {
-    width: min(320px, calc(100vw - 48px));
-    height: auto;
-    max-height: 78vh;
-    padding: 22px;
-  }
-}
-.mslide::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--grad-mesh);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 700ms var(--ease-out);
-}
-.mslide.is-active::before {
-  opacity: 0.5;
+    0 18px 44px -22px rgba(0, 0, 0, 0.7);
 }
 
-/* ---- Card header (game-card inspired: badge + diagonal + title) ---- */
-.mslide__card-header {
+/* ---- Inner content wrapper.
+   Bears: padding, 3D tilt (cursor-driven), exit-time slice clip-path,
+   warp filter and jitter translateX. Decorative brackets/scanline stay
+   on .mslide so the holographic frame is stable while content vibrates. */
+.mslide__inner {
   position: relative;
-  height: 76px;
-  margin: -28px -28px 24px -28px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  background: linear-gradient(
-    105deg,
-    rgba(var(--type-bg-rgb, 106, 166, 255), 0.12) 0%,
-    rgba(10, 12, 20, 0.72) 55%
-  );
-  border-bottom: 1px solid rgba(var(--type-accent-rgb), 0.2);
-}
-
-/* Dark badge panel â€” diagonal right edge (\) */
-.mslide__badge {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 2;
-  width: 82px;
+  width: 100%;
   height: 100%;
-  background: rgba(5, 6, 10, 0.65);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+  padding: 26px 26px 22px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding-right: 10px;
+  flex: 1;
+  transform-style: preserve-3d;
+  transform:
+    rotateY(var(--rx, 0deg))
+    rotateX(var(--ry, 0deg))
+    translateX(calc(var(--exit-jit, 0) * 1px));
+  transition: transform 260ms var(--ease-out);
+  filter:
+    brightness(calc(1 + var(--exit-t, 0) * 0.45))
+    saturate(calc(1 + var(--exit-t, 0) * 0.9))
+    hue-rotate(calc(var(--exit-t, 0) * 22deg));
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% calc(33% - var(--exit-t, 0) * 9%),
+    0% calc(33% - var(--exit-t, 0) * 9%),
+    0% calc(33% + var(--exit-t, 0) * 3%),
+    100% calc(33% + var(--exit-t, 0) * 3%),
+    100% calc(66% - var(--exit-t, 0) * 6%),
+    0% calc(66% - var(--exit-t, 0) * 6%),
+    0% calc(66% + var(--exit-t, 0) * 5%),
+    100% calc(66% + var(--exit-t, 0) * 5%),
+    100% 100%,
+    0% 100%
+  );
+}
+.mslide.is-active .mslide__inner {
+  transition: transform 120ms var(--ease-out);
 }
 
-.mslide__badge-num {
+/* Depth-of-field — desktop / fine pointer only.
+   On coarse pointers (mobile) the filter is killed in the mobile block
+   below to keep Android Chrome's compositor breathing. */
+@media (pointer: fine) {
+  .mslide {
+    filter: blur(var(--depth-blur, 0px));
+  }
+}
+
+/* ---- Corner brackets (holographic frame) ---- */
+.mslide__bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--type-accent);
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 350ms var(--ease-out);
+}
+.mslide__bracket--tl {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.mslide__bracket--tr {
+  top: 8px;
+  right: 8px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.mslide__bracket--bl {
+  bottom: 8px;
+  left: 8px;
+  border-right: 0;
+  border-top: 0;
+}
+.mslide__bracket--br {
+  bottom: 8px;
+  right: 8px;
+  border-left: 0;
+  border-top: 0;
+}
+.mslide.is-active .mslide__bracket {
+  opacity: 1;
+}
+
+/* ---- Top scanline accent ---- */
+.mslide__scanline {
+  position: absolute;
+  top: 0;
+  left: 16%;
+  right: 16%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--type-accent),
+    transparent
+  );
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 350ms var(--ease-out);
+}
+.mslide.is-active .mslide__scanline {
+  opacity: 1;
+}
+
+/* ---- Head row (number · codename · type chip) ---- */
+.mslide__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
   font-family: var(--font-mono);
-  font-size: 26px;
+}
+.mslide__num {
+  font-size: 22px;
   font-weight: 700;
   color: var(--type-accent);
+  letter-spacing: -0.02em;
   line-height: 1;
-  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
-  transition: color 500ms var(--ease-out);
+  text-shadow: 0 0 12px rgba(var(--type-accent-rgb), 0.45);
 }
-/* Legendary: gold gradient text */
-.mslide--legendary .mslide__badge-num,
-.mslide--contact .mslide__badge-num {
+.mslide__num--contact {
+  font-size: 24px;
+  line-height: 0.9;
+}
+.mslide--legendary .mslide__num,
+.mslide--contact .mslide__num {
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #fbbf24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.mslide__badge-num--contact {
-  font-size: 32px;
-}
-
-.mslide__badge-label {
-  font-family: var(--font-mono);
-  font-size: 7px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--fg-4);
-}
-
-/* Title + date strip */
-.mslide__header-body {
+.mslide__codename {
   flex: 1;
   min-width: 0;
-  padding: 0 12px 0 22px;
-}
-
-.mslide__title {
-  color: var(--fg-1);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  margin: 0 0 3px;
-  line-height: 1.25;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  position: relative;
-}
-
-.mslide__date {
-  font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--fg-3);
-  letter-spacing: 0.1em;
-  font-variant-numeric: tabular-nums;
-  display: block;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Type chip â€” right side of header; color driven by .type-* class */
-.mslide__type-chip {
+/* ---- Type chip ---- */
+.mslide__chip {
   flex-shrink: 0;
-  margin-right: 16px;
   padding: 4px 9px;
-  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   border: 1px solid transparent;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%
+  );
 }
-.mslide__type-chip.type-education {
+.mslide__chip.type-education {
   color: var(--type-education);
   background: rgba(90, 215, 255, 0.12);
-  border-color: rgba(90, 215, 255, 0.3);
+  border-color: rgba(90, 215, 255, 0.32);
 }
-.mslide__type-chip.type-work {
+.mslide__chip.type-work {
   color: var(--type-work);
   background: rgba(106, 166, 255, 0.12);
-  border-color: rgba(106, 166, 255, 0.3);
+  border-color: rgba(106, 166, 255, 0.32);
 }
-.mslide__type-chip.type-freelance {
+.mslide__chip.type-freelance {
   color: var(--type-freelance);
   background: rgba(184, 123, 255, 0.12);
-  border-color: rgba(184, 123, 255, 0.3);
+  border-color: rgba(184, 123, 255, 0.32);
 }
-.mslide__type-chip.type-project {
+.mslide__chip.type-project {
   color: var(--type-project);
   background: rgba(74, 222, 128, 0.12);
-  border-color: rgba(74, 222, 128, 0.3);
+  border-color: rgba(74, 222, 128, 0.32);
 }
-.mslide__type-chip--hire {
+.mslide__chip--hire {
   color: #fbbf24;
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.4);
 }
 
-/* Rarity badge label colors */
-.mslide--common .mslide__badge-label {
-  color: var(--rarity-common);
+/* ---- Role · date · description ---- */
+.mslide__role {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--fg-1);
+  line-height: 1.15;
+  margin: 0 0 6px;
 }
-.mslide--rare .mslide__badge-label {
-  color: var(--rarity-rare);
+.mslide__date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 16px;
 }
-.mslide--epic .mslide__badge-label {
-  color: var(--rarity-epic);
-}
-.mslide--legendary .mslide__badge-label,
-.mslide--contact .mslide__badge-label {
-  color: var(--rarity-legendary);
-}
-
-/* Epic & legendary: header shimmer sweep */
-.mslide--epic .mslide__card-header::after,
-.mslide--legendary .mslide__card-header::after,
-.mslide--contact .mslide__card-header::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.07) 50%,
-    transparent 100%
-  );
-  animation: header-shimmer 3s var(--ease-in-out) infinite;
-  pointer-events: none;
-  transform: translateX(-100%);
-}
-@keyframes header-shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(200%);
-  }
-}
-
-/* Legendary: animated gold pulse when active */
-.mslide--legendary.is-active,
-.mslide--contact.is-active {
-  animation: legendary-pulse 2.5s ease-in-out 700ms infinite;
-}
-@keyframes legendary-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 18px 44px -22px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(251, 191, 36, 0.28),
-      0 0 28px rgba(251, 191, 36, 0.12),
-      inset 2px 0 0 #fbbf24;
-  }
-  50% {
-    box-shadow:
-      0 18px 44px -22px rgba(0, 0, 0, 0.7),
-      0 0 0 1px rgba(251, 191, 36, 0.5),
-      0 0 56px rgba(251, 191, 36, 0.22),
-      inset 2px 0 0 #fbbf24;
-  }
-}
-
 .mslide__desc {
   color: var(--fg-2);
   font-size: 14px;
-  line-height: 1.55;
-  margin: 0 0 auto;
-  position: relative;
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+.mslide__desc a {
+  color: var(--type-accent);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(var(--type-accent-rgb), 0.5);
+}
+.mslide__desc a:hover {
+  border-bottom-style: solid;
 }
 
-.mslide__footer {
-  padding-top: 16px;
-  border-top: 1px solid var(--glass-stroke);
+/* ---- Footer (XP pill + skills) ---- */
+.mslide__foot {
+  margin-top: auto;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  position: relative;
-}
-.mslide__xp-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.07);
 }
 .mslide__xp {
   font-family: var(--font-mono);
-  font-size: 18px;
-  color: var(--success);
+  font-size: 12px;
   font-weight: 700;
+  color: var(--success);
+  padding: 4px 10px;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
-}
-.mslide__xp-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--fg-3);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    0 100%
+  );
 }
 .mslide__skills {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.skill-badge--more {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-3);
+  padding: 3px 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: transparent;
+  border-radius: 999px;
 }
 
 /* ============== Rail nodes ============== */
@@ -1710,49 +1755,66 @@ body {
   }
 
   /* --- Halt ambient idle animations to free GPU/main thread --- */
-  .mslide--epic .mslide__card-header::after,
-  .mslide--legendary .mslide__card-header::after,
-  .mslide--contact .mslide__card-header::after {
-    animation: none;
-  }
-  .mslide--legendary.is-active,
-  .mslide--contact.is-active {
-    animation: none;
-  }
   .contact-status__dot {
     animation: none;
+  }
+  /* --- Lighter active glow on mobile.
+     Avoids repaint storms while the active card flips during scroll. */
+  .mslide.is-active {
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--type-accent-rgb), 0.45),
+      0 0 24px rgba(var(--type-accent-rgb), 0.16);
+  }
+  /* --- Drop shadow/border transitions on cards: they fight the rAF
+     transform updates and cause perceived stutter on mobile. */
+  .mslide {
+    transition: none;
   }
 
   /* --- Timeline card --- */
   .track-cards {
-    /* Centre on a 320px card (half = 160px) instead of 440px (220px) */
-    padding: 0 calc(50vw - min(160px, 50vw - 24px));
+    /* Centre on a 360px card (half = 180px) — bigger than the previous
+       320px so the new holographic layout reads better on phones. */
+    padding: 0 calc(50vw - min(180px, 50vw - 14px));
   }
   .mslide {
-    width: min(320px, calc(100vw - 48px));
-    /* Use auto height + dvh cap so content is never clipped on small phones */
+    width: min(360px, calc(100vw - 28px));
     height: auto;
-    max-height: min(420px, 70dvh);
-    padding: 22px;
+    min-height: auto;
+    max-height: min(460px, 76svh);
   }
-  .mslide__card-header {
-    height: 68px;
-    margin: -22px -22px 20px -22px;
+  .mslide__inner {
+    padding: 22px 20px 18px;
   }
-  .mslide__badge {
-    width: 70px;
+  .mslide__head {
+    gap: 10px;
+    margin-bottom: 14px;
   }
-  .mslide__badge-num {
-    font-size: 20px;
+  .mslide__num {
+    font-size: 19px;
   }
-  .mslide__title {
-    font-size: 11px;
-    letter-spacing: 0.05em;
+  .mslide__codename {
+    font-size: 9px;
+    letter-spacing: 0.2em;
   }
-  .mslide__type-chip {
-    margin-right: 10px;
+  .mslide__chip {
     font-size: 8px;
-    padding: 3px 6px;
+    padding: 3px 7px;
+  }
+  .mslide__role {
+    font-size: 18px;
+  }
+  .mslide__date {
+    font-size: 9px;
+    margin-bottom: 12px;
+  }
+  .mslide__desc {
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .mslide__xp {
+    font-size: 11px;
   }
 
   /* --- Top chrome --- */
@@ -1849,6 +1911,50 @@ body {
   }
   .lvlup-num {
     font-size: 52px;
+  }
+}
+
+/* ============== Coarse-pointer perf strip ==============
+   Drops the GPU-heavy bits from .mslide / .mslide__inner whenever the
+   primary pointer is coarse (touch). This is the path Android Chrome
+   takes, where clip-path mask rasterization + per-frame filter + radial
+   gradient backgrounds add up to dropped scroll frames. */
+@media (pointer: coarse) {
+  .mslide {
+    /* Kill the chamfer clip-path (mask cost per repaint) — use a soft
+       radius instead. The corner brackets retain the cyberpunk read. */
+    clip-path: none;
+    border-radius: 12px;
+    /* Drop the radial gradient layer; flat dark base is cheaper. */
+    background: linear-gradient(
+      180deg,
+      rgba(12, 16, 28, 0.94) 0%,
+      rgba(6, 8, 16, 0.97) 100%
+    );
+    box-shadow: 0 14px 32px -18px rgba(0, 0, 0, 0.7);
+    /* No depth-of-field blur on touch GPUs. */
+    filter: none !important;
+    /* Drop the 3D context + backface promotion. There is no tilt or
+       3D children on mobile, so forcing every card onto its own GPU
+       layer just eats VRAM and slows the compositor. */
+    backface-visibility: visible;
+    transform-style: flat;
+    will-change: transform;
+  }
+  .mslide.is-active {
+    /* No blurred outer glow on mobile — the 22px box-shadow blur was
+       repainting on every active-card change. Sharp inset border only. */
+    box-shadow: inset 0 0 0 1px rgba(var(--type-accent-rgb), 0.6);
+  }
+  .mslide__inner {
+    /* Cut the slice clip-path, warp filter and per-frame jitter
+       translateX entirely on mobile. Outer card transform is enough
+       for the warp-out read. */
+    clip-path: none !important;
+    filter: none !important;
+    transform: none;
+    transform-style: flat;
+    transition: none;
   }
 }
 

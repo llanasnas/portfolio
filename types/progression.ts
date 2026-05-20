@@ -13,6 +13,7 @@ export interface Skill {
 
 export interface Milestone {
     title: string;
+    role?: string;
     dateRange: string;
     type: "education" | "work" | "freelance" | "project";
     description: string;

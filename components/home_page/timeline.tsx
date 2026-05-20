@@ -23,7 +23,13 @@ function cardStyle(i: number, mPos: number): CSSProperties {
   const di = i - mPos;
 
   if (di > FORWARD_RANGE || di < -BACKWARD_RANGE) {
-    return { display: "none" };
+    // Keep element in 3D space but invisible — avoids the display:none
+    // toggle that causes layout recalculations and visible flickering on mobile.
+    return {
+      transform: `translate3d(-50%, -50%, -99999px)`,
+      opacity: 0,
+      pointerEvents: "none",
+    };
   }
 
   let tz: number;

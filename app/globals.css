@@ -476,6 +476,9 @@ body {
   .cv-ring {
     width: 62vh;
     height: 62vh;
+    /* Use dvh so rings scale with the dynamic viewport (address-bar-aware) */
+    width: 62dvh;
+    height: 62dvh;
   }
   .cv-ring__c {
     border-width: 2px;
@@ -494,6 +497,10 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
+  /* Use dynamic viewport height on mobile so the stage fills exactly the
+     visible area — prevents rings from appearing off-centre when the
+     browser's address bar is visible */
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   z-index: 1;
@@ -1723,7 +1730,9 @@ body {
   }
   .mslide {
     width: min(320px, calc(100vw - 48px));
-    height: 420px;
+    /* Use auto height + dvh cap so content is never clipped on small phones */
+    height: auto;
+    max-height: min(420px, 70dvh);
     padding: 22px;
   }
   .mslide__card-header {

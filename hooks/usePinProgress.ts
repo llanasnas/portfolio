@@ -25,7 +25,7 @@ export function usePinProgress(): [number, boolean] {
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     // Debounce resize to absorb mobile URL-bar show/hide bounces
-    let resizeTimer = 0;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     const onResize = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(update, 200);

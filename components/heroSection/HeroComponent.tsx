@@ -141,6 +141,10 @@ function TabletSurface({ onActivate }: { onActivate: () => void }) {
         </div>
         <div className={styles.tabletHint}>code with me ⟶</div>
       </div>
+      <div className={styles.tabletTooltip} aria-hidden="true">
+        <span className={styles.tabletTipLine1}>&gt; simulations.tablet</span>
+        <span className={styles.tabletTipLine2}>&gt; syncing neural grid...</span>
+      </div>
     </div>
   );
 }

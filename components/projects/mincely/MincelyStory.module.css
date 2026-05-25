@@ -231,6 +231,7 @@
   position: absolute;
   line-height: 0.92;
   margin: 0;
+  display: none;
   background: linear-gradient(180deg, #fff 0%, #c8e6da 45%, #5ad7ff 100%);
   -webkit-background-clip: text;
   background-clip: text;

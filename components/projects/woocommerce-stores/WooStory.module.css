@@ -228,6 +228,7 @@
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.92;
+  display: none;
   position: absolute;
   margin: 0;
   background: linear-gradient(180deg, #fff 0%, #d8c8ff 45%, #a855f7 100%);

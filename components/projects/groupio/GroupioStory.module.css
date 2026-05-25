@@ -256,6 +256,7 @@
   background-clip: text;
   position: absolute;
   color: transparent;
+  display: none;
   filter: drop-shadow(0 0 40px rgba(106, 166, 255, 0.35))
     drop-shadow(0 0 80px rgba(184, 123, 255, 0.25));
 }

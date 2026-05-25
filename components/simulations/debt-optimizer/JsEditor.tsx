@@ -7,7 +7,10 @@ import Prism from "prismjs";
 import "prismjs/components/prism-javascript";
 import type { Expense, UserNode } from "@/lib/simulations/debt-optimizer";
 import { GlowButton } from "@/components/ui/GlowButton";
+import { MonacoEditorWrapper } from "./MonacoEditorWrapper";
 import styles from "./JsEditor.module.css";
+
+const USE_MONACO_EDITOR = true;
 
 // Cyberpunk Prism syntax theme — injected once into <head>
 const PRISM_THEME = `
@@ -137,6 +140,157 @@ interface ConsoleEntry {
   type: "log" | "error" | "warn";
 }
 
+interface CompletionItem {
+  label: string;
+  insertText: string;
+  detail: string;
+  kind: "variable" | "function" | "snippet" | "property" | "method";
+}
+
+interface CompletionContext {
+  objectName: string | null;
+  prefix: string;
+  replaceStart: number;
+}
+
+const CORE_COMPLETIONS: CompletionItem[] = [
+  {
+    label: "sendResponse(transfers)",
+    insertText: "sendResponse(transfers)",
+    detail: "Apply transfers to canvas",
+    kind: "function",
+  },
+  {
+    label: "forEach((item) => { ... })",
+    insertText: "forEach((item) => {\n  \n})",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+  {
+    label: "map((item) => ...)",
+    insertText: "map((item) => )",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+  {
+    label: "filter((item) => ...)",
+    insertText: "filter((item) => )",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+  {
+    label: "reduce((acc, item) => ..., init)",
+    insertText: "reduce((acc, item) => , )",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+  {
+    label: "push(value)",
+    insertText: "push()",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+  {
+    label: "find((item) => ...)",
+    insertText: "find((item) => )",
+    kind: "snippet",
+    detail: "Array method snippet",
+  },
+];
+
+const MEMBER_COMPLETIONS: CompletionItem[] = [
+  {
+    label: "forEach((item) => { ... })",
+    insertText: "forEach((item) => {\n  \n})",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "map((item) => ...)",
+    insertText: "map((item) => )",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "filter((item) => ...)",
+    insertText: "filter((item) => )",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "reduce((acc, item) => ..., init)",
+    insertText: "reduce((acc, item) => , )",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "find((item) => ...)",
+    insertText: "find((item) => )",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "sort((a, b) => ...)",
+    insertText: "sort((a, b) => )",
+    detail: "Array method",
+    kind: "method",
+  },
+  {
+    label: "push(value)",
+    insertText: "push()",
+    detail: "Array method",
+    kind: "method",
+  },
+];
+
+function getCompletionContext(code: string, cursor: number): CompletionContext {
+  const before = code.slice(0, cursor);
+  const dotMatch = before.match(/([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)?$/);
+  if (dotMatch) {
+    const objectName = dotMatch[1] ?? null;
+    const prefix = dotMatch[2] ?? "";
+    return {
+      objectName,
+      prefix,
+      replaceStart: cursor - prefix.length,
+    };
+  }
+
+  const tokenMatch = before.match(/([A-Za-z_$][\w$]*)$/);
+  const prefix = tokenMatch?.[1] ?? "";
+  return {
+    objectName: null,
+    prefix,
+    replaceStart: cursor - prefix.length,
+  };
+}
+
+function scoreCompletion(item: CompletionItem, prefix: string): number {
+  const label = item.label.toLowerCase();
+  const p = prefix.toLowerCase();
+  if (!p) return 1;
+  if (label === p) return 100;
+  if (label.startsWith(p)) return 60;
+  if (label.includes(p)) return 25;
+  return 0;
+}
+
+function getCompletions(
+  context: CompletionContext,
+  forceAll: boolean,
+): CompletionItem[] {
+  const source = context.objectName ? MEMBER_COMPLETIONS : CORE_COMPLETIONS;
+
+  const filtered = source
+    .map((item) => ({ item, score: scoreCompletion(item, context.prefix) }))
+    .filter(({ score }) => forceAll || score > 0)
+    .sort((a, b) => b.score - a.score || a.item.label.localeCompare(b.item.label))
+    .slice(0, 8)
+    .map(({ item }) => item);
+
+  return filtered;
+}
+
 let _entryId = 0;
 
 function playAlarm(): void {
@@ -171,18 +325,32 @@ export function JsEditor({
   onApplyResponseError,
 }: JsEditorProps) {
   const [code, setCode] = useState(DEFAULT_CODE);
+  const [hintSignal, setHintSignal] = useState(0);
   const [logs, setLogs] = useState<ConsoleEntry[]>([]);
   const [running, setRunning] = useState(false);
   const [userTransferCount, setUserTransferCount] = useState<number | null>(
     null,
   );
   const [expanded, setExpanded] = useState(false);
+  const [showCompletions, setShowCompletions] = useState(false);
+  const [completionItems, setCompletionItems] = useState<CompletionItem[]>([]);
+  const [activeCompletion, setActiveCompletion] = useState(0);
+  const [completionTop, setCompletionTop] = useState(42);
+  const [completionLeft, setCompletionLeft] = useState(14);
+  const completionCtxRef = useRef<CompletionContext>({
+    objectName: null,
+    prefix: "",
+    replaceStart: 0,
+  });
+  const editorWrapRef = useRef<HTMLDivElement>(null);
+  const editorTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const consoleRef = useRef<HTMLDivElement>(null);
   const [showAlarm, setShowAlarm] = useState(false);
   const alarmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Inject Prism cyberpunk theme once on client
+  // Inject Prism theme only when fallback editor is active.
   useEffect(() => {
+    if (USE_MONACO_EDITOR) return;
     if (document.getElementById("prism-cyber-css")) return;
     const style = document.createElement("style");
     style.id = "prism-cyber-css";
@@ -213,6 +381,76 @@ export function JsEditor({
     beneficiaryIds: e.beneficiaryIds,
   }));
   const usrData = users.map((u) => ({ id: u.id, name: u.name }));
+
+  const updateCompletionAnchor = useCallback((cursor: number, nextCode: string) => {
+    const before = nextCode.slice(0, cursor);
+    const lines = before.split("\n");
+    const line = Math.max(0, lines.length - 1);
+    const col = lines[lines.length - 1]?.length ?? 0;
+    const left = Math.min(520, 14 + col * 7.1);
+    const top = 14 + line * 20.4 + 28;
+    setCompletionLeft(left);
+    setCompletionTop(top);
+  }, []);
+
+  const refreshCompletions = useCallback(
+    (nextCode: string, forceAll = false) => {
+      const textarea = editorTextareaRef.current;
+      if (!textarea) return;
+
+      const cursor = textarea.selectionStart ?? 0;
+      const context = getCompletionContext(nextCode, cursor);
+      completionCtxRef.current = context;
+
+      const canAutoOpen = forceAll || context.prefix.length > 0 || !!context.objectName;
+      if (!canAutoOpen) {
+        setShowCompletions(false);
+        return;
+      }
+
+      const matches = getCompletions(context, forceAll);
+      if (matches.length === 0) {
+        setShowCompletions(false);
+        return;
+      }
+
+      updateCompletionAnchor(cursor, nextCode);
+      setCompletionItems(matches);
+      setActiveCompletion(0);
+      setShowCompletions(true);
+    },
+    [updateCompletionAnchor],
+  );
+
+  const applyCompletion = useCallback(
+    (item: CompletionItem) => {
+      const textarea = editorTextareaRef.current;
+      if (!textarea) return;
+
+      const cursor = textarea.selectionStart ?? 0;
+      const context = completionCtxRef.current;
+      const start = Math.max(0, Math.min(context.replaceStart, cursor));
+      const nextCode = `${code.slice(0, start)}${item.insertText}${code.slice(cursor)}`;
+      const nextCursor = start + item.insertText.length;
+
+      setCode(nextCode);
+      setShowCompletions(false);
+
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.selectionStart = nextCursor;
+        textarea.selectionEnd = nextCursor;
+      });
+    },
+    [code],
+  );
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    const root = editorWrapRef.current;
+    if (!root) return;
+    editorTextareaRef.current = root.querySelector("textarea");
+  }, [hasStarted, expanded]);
 
   const runCode = useCallback(() => {
     setRunning(true);
@@ -371,22 +609,105 @@ export function JsEditor({
       ) : (
         <>
           <div
+            ref={editorWrapRef}
             className={styles.editorWrap}
             onPaste={(e) => {
+              if (USE_MONACO_EDITOR) return;
               e.preventDefault();
               triggerAlarm();
             }}
           >
-            <Editor
-              value={code}
-              onValueChange={setCode}
-              highlight={highlight}
-              padding={14}
-              textareaClassName={styles.editorTextarea}
-              preClassName={styles.editorPre}
-              className={styles.editorInner}
-              tabSize={2}
-            />
+            {USE_MONACO_EDITOR ? (
+              <MonacoEditorWrapper
+                value={code}
+                onChange={setCode}
+                onBlockedPaste={triggerAlarm}
+                hintSignal={hintSignal}
+                expanded={expanded}
+              />
+            ) : (
+              <>
+                <Editor
+                  value={code}
+                  onValueChange={(nextCode) => {
+                    setCode(nextCode);
+                    refreshCompletions(nextCode);
+                  }}
+                  highlight={highlight}
+                  padding={14}
+                  textareaClassName={styles.editorTextarea}
+                  preClassName={styles.editorPre}
+                  className={styles.editorInner}
+                  tabSize={2}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.code === "Space") {
+                      e.preventDefault();
+                      refreshCompletions(code, true);
+                      return;
+                    }
+
+                    if (!showCompletions) return;
+
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setActiveCompletion((prev) =>
+                        prev + 1 >= completionItems.length ? 0 : prev + 1,
+                      );
+                      return;
+                    }
+
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setActiveCompletion((prev) =>
+                        prev - 1 < 0 ? completionItems.length - 1 : prev - 1,
+                      );
+                      return;
+                    }
+
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      setShowCompletions(false);
+                      return;
+                    }
+
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      if (completionItems.length === 0) return;
+                      e.preventDefault();
+                      applyCompletion(completionItems[activeCompletion]);
+                    }
+                  }}
+                  onBlur={() => {
+                    setShowCompletions(false);
+                  }}
+                />
+
+                {hasStarted && showCompletions && completionItems.length > 0 && (
+                  <div
+                    className={styles.completions}
+                    style={{ top: completionTop, left: completionLeft }}
+                    role="listbox"
+                    aria-label="Code suggestions"
+                  >
+                    {completionItems.map((item, idx) => (
+                      <button
+                        key={`${item.label}-${idx}`}
+                        type="button"
+                        className={`${styles.completionItem} ${idx === activeCompletion ? styles.completionItemActive : ""}`}
+                        role="option"
+                        aria-selected={idx === activeCompletion}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          applyCompletion(item);
+                        }}
+                      >
+                        <span className={styles.completionMain}>{item.label}</span>
+                        <span className={styles.completionMeta}>{item.detail}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <div className={styles.runBar}>
@@ -398,6 +719,20 @@ export function JsEditor({
             >
               ▶ Run
             </GlowButton>
+            <button
+              className={styles.hintBtn}
+              onClick={() => {
+                if (USE_MONACO_EDITOR) {
+                  setHintSignal((v) => v + 1);
+                  return;
+                }
+                refreshCompletions(code, true);
+              }}
+              title="Show code suggestions"
+              type="button"
+            >
+              Hints
+            </button>
             <button
               className={styles.clearBtn}
               onClick={() => {

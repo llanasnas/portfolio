@@ -4,7 +4,6 @@ import { type CSSProperties } from "react";
 import type { Milestone } from "@/types/progression";
 import { milestoneRarity } from "@/lib/progression-system";
 import { SkillBadge } from "./skills";
-import Link from "next/link";
 
 interface TimelineProps {
   milestones: Milestone[];
@@ -32,6 +31,38 @@ export function Timeline({
   void onScrollToContact;
   const N = milestones.length;
 
+  const handleCardLinkClickCapture = (
+    e: React.MouseEvent<HTMLElement>,
+  ) => {
+    const target = e.target as HTMLElement | null;
+    const anchor = target?.closest("a") as HTMLAnchorElement | null;
+    if (!anchor) return;
+
+    const href = anchor.getAttribute("href");
+    if (!href) return;
+
+    // Force navigation so overlapping 3D layers don't swallow anchor behavior.
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isExternal =
+      /^https?:\/\//i.test(href) ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:");
+
+    if (isExternal) {
+      const targetAttr = anchor.getAttribute("target") ?? "_blank";
+      if (targetAttr === "_self") {
+        window.location.href = href;
+        return;
+      }
+      window.open(href, targetAttr, "noopener,noreferrer");
+      return;
+    }
+
+    window.location.href = href;
+  };
+
   return (
     <div className="track-wrap">
       <div className="track-cards">
@@ -50,6 +81,7 @@ export function Timeline({
               key={i}
               data-card-index={i}
               className={`mslide mslide--${m.type} mslide--${rarity}${cls ? ` ${cls}` : ""}`}
+              onClickCapture={handleCardLinkClickCapture}
             >
               <span
                 className="mslide__bracket mslide__bracket--tl"
@@ -88,6 +120,22 @@ export function Timeline({
                   dangerouslySetInnerHTML={{ __html: m.description }}
                 />
 
+                {m.title === "Groupio" && (
+                  <button
+                    type="button"
+                    className="mslide__action-link"
+                    onClick={() => {
+                      window.open(
+                        "https://groupio.llanasdev.com",
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
+                  >
+                    Live demo →
+                  </button>
+                )}
+
                 <footer className="mslide__foot">
                   <span className="mslide__xp">
                     +{m.xp.toLocaleString()} XP
@@ -110,11 +158,16 @@ export function Timeline({
 
         {(() => {
           const dist = Math.abs(activeIdx - N);
-          const cls = dist === 0 ? "is-active" : dist === 1 ? "is-near" : "";
+          const cls = activeIdx >= N - 1
+            ? "is-active"
+            : dist === 1
+              ? "is-near"
+              : "";
           return (
             <article
               data-card-index={N}
               className={`mslide mslide--contact mslide--legendary${cls ? ` ${cls}` : ""}`}
+              onClickCapture={handleCardLinkClickCapture}
             >
               <span
                 className="mslide__bracket mslide__bracket--tl"
@@ -170,9 +223,12 @@ export function Timeline({
                 </div>
 
                 <div className="mslide__contact-cta">
-                  <Link className="btn-mission" href="/contact">
+                  <a
+                    className="btn-mission"
+                    href="/contact"
+                  >
                     ↓ Begin Mission
-                  </Link>
+                  </a>
                 </div>
               </div>
             </article>

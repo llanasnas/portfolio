@@ -235,6 +235,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   position: absolute;
+  display: none;
   color: transparent;
   filter: drop-shadow(0 0 40px rgba(45, 212, 191, 0.35))
     drop-shadow(0 0 80px rgba(90, 215, 255, 0.18));

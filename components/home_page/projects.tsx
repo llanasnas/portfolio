@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSectionParallax } from "@/hooks/useSectionParallax";
 
 const PROJECTS = [
@@ -90,7 +91,31 @@ const RARITY_LABELS = {
 };
 
 export function ProjectsSection() {
+  const router = useRouter();
   const { ref, y, blobStyle } = useSectionParallax(0.2);
+
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return !!target.closest("a, button, input, textarea, select, [role='button']");
+  };
+
+  const handleCardPointerMove = (
+    e: React.PointerEvent<HTMLElement>,
+  ) => {
+    if (e.pointerType && e.pointerType !== "mouse") return;
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.setProperty("--hover-x", px.toFixed(4));
+    card.style.setProperty("--hover-y", py.toFixed(4));
+  };
+
+  const resetCardPointer = (e: React.PointerEvent<HTMLElement>) => {
+    const card = e.currentTarget;
+    card.style.setProperty("--hover-x", "0");
+    card.style.setProperty("--hover-y", "0");
+  };
 
   return (
     <section
@@ -148,14 +173,21 @@ export function ProjectsSection() {
               <article
                 key={p.id}
                 className={`proj-card proj-card--${p.rarity}${cs ? " proj-card--clickable" : ""}`}
+                role={cs ? "link" : undefined}
+                tabIndex={cs ? 0 : undefined}
+                onPointerMove={handleCardPointerMove}
+                onPointerLeave={resetCardPointer}
+                onClick={(e) => {
+                  if (!cs || isInteractiveTarget(e.target)) return;
+                  router.push(cs);
+                }}
+                onKeyDown={(e) => {
+                  if (!cs || isInteractiveTarget(e.target)) return;
+                  if (e.key !== "Enter" && e.key !== " ") return;
+                  e.preventDefault();
+                  router.push(cs);
+                }}
               >
-                {cs && (
-                  <Link
-                    href={cs}
-                    className="proj-card__overlay"
-                    aria-label={`Open case study: ${p.title}`}
-                  />
-                )}
                 <div className="proj-card__rarity-bar" aria-hidden="true" />
                 <div className="proj-card__head">
                   <div className="proj-card__meta">

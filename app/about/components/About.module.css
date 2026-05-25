@@ -234,19 +234,25 @@
 
 /* Name with glitch */
 .name {
-  position: relative;
-  margin: 1.4rem 0 0;
   font-family: var(--font-sans);
+  letter-spacing: -0.04em;
+
+  background: linear-gradient(#fff 0%, #c8cde6 55%, #6aa6ff 100%);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+
+  filter: drop-shadow(0 0 32px #6aa6ff52) drop-shadow(0 0 80px #b87bff38);
+
+  margin: 1.4rem 0 0;
+
   font-size: clamp(2.8rem, 8vw, 6.4rem);
   font-weight: 800;
   line-height: 0.95;
-  letter-spacing: -0.04em;
-  background: linear-gradient(180deg, #fff 0%, #c8cde6 55%, #6aa6ff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 32px rgba(106, 166, 255, 0.32))
-    drop-shadow(0 0 80px rgba(184, 123, 255, 0.22));
+  position: relative;
 }
 .name__row {
   display: block;

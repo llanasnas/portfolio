@@ -214,7 +214,7 @@ body {
   background: #05060a;
   color: var(--fg-2);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -516,25 +516,26 @@ body {
   width: 100%;
 }
 .pin-stage {
-  position: sticky;
-  top: 0;
+  position: relative;
   height: 100vh;
   /* svh = smallest stable viewport. Stage always fits the visible area
      even when the address bar is shown, and doesn't resize when the bar
      hides — which fixes the visible jumping/disappearing on mobile. */
   height: 100svh;
   width: 100%;
-  overflow: hidden;
+  overflow: clip;
+  /* Pinning is handled by ScrollTrigger (pin: ".pin-stage", pinSpacing:
+     false) instead of native `position: sticky` — Firefox does not honor
+     sticky reliably when the page also runs Lenis + 3D-transformed
+     descendants, so the scrub timeline pins this element directly. */
   z-index: 1;
-  perspective: 1400px;
-  perspective-origin: 50% 45%;
   background:
     linear-gradient(rgba(5, 6, 10, 0.62), rgba(5, 6, 10, 0.82)),
     url("/assets/cv_bg.webp") center/cover no-repeat,
     #05060a;
 }
 @media (max-width: 760px), (pointer: coarse) {
-  .pin-stage {
+  .track-cards {
     perspective: 900px;
   }
 }
@@ -1097,12 +1098,15 @@ body {
   inset: 0;
   z-index: 5;
   transform-style: preserve-3d;
+  overflow: clip;
   pointer-events: none;
 }
 .track-cards {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
   pointer-events: none;
 }
 .track-rail {
@@ -1131,6 +1135,7 @@ body {
   background: linear-gradient(90deg, var(--neon-cyan), var(--neon-violet));
   box-shadow: 0 0 14px rgba(90, 215, 255, 0.7);
   transition: width 600ms var(--ease-out);
+  pointer-events: none;
 }
 @media (max-width: 760px), (pointer: coarse) {
   .track-rail {
@@ -1185,6 +1190,8 @@ body {
 
 /* ---- Holographic panel card ---- */
 .mslide {
+  --rx: 0;
+  --ry: 0;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1225,6 +1232,8 @@ body {
   transform-style: preserve-3d;
   /* Transition on shadow/border caused repaint storms during scroll —
      the active card switches between siblings every milestone. Drop it. */
+  pointer-events: none;
+  z-index: 1;
 }
 .mslide.is-active {
   border-color: rgba(var(--type-accent-rgb), 0.6);
@@ -1232,6 +1241,21 @@ body {
     inset 0 0 0 1px rgba(var(--type-accent-rgb), 0.22),
     0 0 48px rgba(var(--type-accent-rgb), 0.22),
     0 18px 44px -22px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  z-index: 3;
+}
+.mslide.is-near {
+  z-index: 2;
+}
+.mslide--contact.is-active {
+  pointer-events: auto;
+  z-index: 4;
+}
+/* Card warped past camera (post-exit) — keep it click-through so the
+   invisible exited card can't intercept clicks meant for the active or
+   contact card sitting behind it in 3D space. */
+.mslide.is-exited {
+  pointer-events: none;
 }
 
 /* ---- Inner content wrapper.
@@ -1248,8 +1272,9 @@ body {
   flex: 1;
   transform-style: preserve-3d;
   transform:
-    rotateY(var(--rx, 0deg))
-    rotateX(var(--ry, 0deg))
+    translate3d(calc(var(--rx, 0) * 0.5px), calc(var(--ry, 0) * -0.4px), 0)
+    rotateY(calc(var(--rx, 0) * 1deg))
+    rotateX(calc(var(--ry, 0) * 1deg))
     translateX(calc(var(--exit-jit, 0) * 1px));
   transition: transform 260ms var(--ease-out);
   filter:
@@ -1273,6 +1298,11 @@ body {
 }
 .mslide.is-active .mslide__inner {
   transition: transform 120ms var(--ease-out);
+}
+
+/* Contact CTA reliability: avoid 3D hit-test drift on the final card */
+.mslide--contact.is-active .mslide__inner {
+  transform: translate3d(0, 0, 0);
 }
 
 /* Depth-of-field — desktop / fine pointer only.
@@ -1458,6 +1488,31 @@ body {
 }
 .mslide__desc a:hover {
   border-bottom-style: solid;
+}
+.mslide__action-link {
+  align-self: flex-start;
+  margin: -4px 0 14px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--type-accent);
+  background: rgba(var(--type-accent-rgb), 0.1);
+  border: 1px solid rgba(var(--type-accent-rgb), 0.35);
+  cursor: pointer;
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 5px),
+    calc(100% - 5px) 100%,
+    0 100%
+  );
+}
+.mslide__action-link:hover {
+  background: rgba(var(--type-accent-rgb), 0.18);
+  border-color: rgba(var(--type-accent-rgb), 0.58);
 }
 
 /* ---- Footer (XP pill + skills) ---- */
@@ -2313,6 +2368,8 @@ body {
 }
 
 .proj-card {
+  --hover-x: 0;
+  --hover-y: 0;
   position: relative;
   isolation: isolate;
   background: linear-gradient(
@@ -2364,20 +2421,7 @@ body {
 .proj-card--clickable {
   cursor: pointer;
 }
-.proj-card__overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: block;
-  text-indent: -9999px;
-  overflow: hidden;
-  border-radius: inherit;
-}
-.proj-card__overlay:focus-visible {
-  outline: 2px solid var(--proj-accent);
-  outline-offset: -4px;
-}
-/* Inner interactive elements sit above the overlay */
+/* Keep card content layered above decorative accents */
 .proj-card__head,
 .proj-card__title,
 .proj-card__desc,
@@ -2437,6 +2481,27 @@ body {
   color: var(--fg-1);
   margin: 0;
   letter-spacing: -0.01em;
+  perspective: 700px;
+}
+.proj-card__image {
+  will-change: transform;
+  transition: transform 220ms var(--ease-out);
+  transform-style: preserve-3d;
+}
+.proj-card:hover .proj-card__image {
+  transform: translate3d(
+      calc(var(--hover-x) * 12px),
+      calc(var(--hover-y) * 10px),
+      0
+    )
+    rotateX(calc(var(--hover-y) * -9deg))
+    rotateY(calc(var(--hover-x) * 9deg));
+}
+
+@media (hover: none), (pointer: coarse) {
+  .proj-card:hover .proj-card__image {
+    transform: none;
+  }
 }
 .proj-card__desc {
   color: var(--fg-2);

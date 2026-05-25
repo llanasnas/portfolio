@@ -85,7 +85,11 @@ export function HomeClient() {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // Lenis + ScrollTrigger normalizeScroll (Android Chrome address-bar fix).
+  // Lenis smooth scroll. NOTE: do NOT call ScrollTrigger.normalizeScroll(true)
+  // here — it scroll-jacks on the JS thread and cancels native scroll events,
+  // which breaks `position: sticky` on `.pin-stage` in Firefox (sticky needs
+  // the native browser scroll thread to update). Lenis uses native scrollTo
+  // under the hood so it stays compatible with sticky.
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const reduced = window.matchMedia(
@@ -104,11 +108,9 @@ export function HomeClient() {
       gsap.ticker.lagSmoothing(0);
       lenis.on("scroll", ScrollTrigger.update);
     }
-    ScrollTrigger.normalizeScroll(true);
     return () => {
       if (rafCb) gsap.ticker.remove(rafCb);
       lenis?.destroy();
-      ScrollTrigger.normalizeScroll(false);
     };
   }, []);
 
@@ -180,13 +182,9 @@ export function HomeClient() {
           const FORWARD = onMobile ? FORWARD_MOBILE : FORWARD_DESKTOP;
           const BACKWARD = onMobile ? BACKWARD_MOBILE : BACKWARD_DESKTOP;
           const EXIT_Z = onMobile ? EXIT_Z_MOBILE : EXIT_Z_DESKTOP;
-          const EXIT_SCALE = onMobile
-            ? EXIT_SCALE_MOBILE
-            : EXIT_SCALE_DESKTOP;
+          const EXIT_SCALE = onMobile ? EXIT_SCALE_MOBILE : EXIT_SCALE_DESKTOP;
 
-          const cards = gsap.utils.toArray<HTMLElement>(
-            ".pin-stage .mslide",
-          );
+          const cards = gsap.utils.toArray<HTMLElement>(".pin-stage .mslide");
           const rings = gsap.utils.toArray<HTMLElement>(
             ".pin-stage [data-tunnel-ring]",
           );
@@ -219,6 +217,12 @@ export function HomeClient() {
               start: "top top",
               end: "bottom bottom",
               scrub: onMobile ? true : 1,
+              // Replace native CSS `position: sticky` with GSAP pinning —
+              // Firefox does not honor sticky reliably when combined with
+              // smooth-scroll libraries or 3D content. ScrollTrigger.pin
+              // uses position:fixed + spacer and works cross-browser.
+              pin: ".pin-stage",
+              pinSpacing: false,
               onUpdate: (self) => onProgress(self.progress),
               invalidateOnRefresh: true,
             },
@@ -242,7 +246,9 @@ export function HomeClient() {
                 scale: 1,
                 opacity: 1,
                 duration: Math.max(0.0001, active - approachStart),
-                ...(isDesktop && { "--depth-blur": "0px" as unknown as number }),
+                ...(isDesktop && {
+                  "--depth-blur": "0px" as unknown as number,
+                }),
               },
               approachStart,
             );
@@ -260,6 +266,15 @@ export function HomeClient() {
                     "--exit-t": 1,
                     "--exit-jit": 6,
                   }),
+                  // Warped-past cards sit invisibly at z=+EXIT_Z, IN FRONT
+                  // of every other card in 3D space. Without dropping
+                  // pointer-events here the exited card's mslide rectangle
+                  // still intercepts clicks meant for the contact card
+                  // behind it (e.g. the "Begin Mission" CTA on the last
+                  // milestone). Scrub-reversible: reverse callback runs
+                  // when ScrollTrigger rewinds past the exit-start.
+                  onComplete: () => el.classList.add("is-exited"),
+                  onReverseComplete: () => el.classList.remove("is-exited"),
                 },
                 active,
               );
@@ -302,11 +317,7 @@ export function HomeClient() {
           // Intro overlay fade
           const introEl = root.querySelector<HTMLElement>(".intro-title");
           if (introEl) {
-            tl.to(
-              introEl,
-              { opacity: 0, duration: 0.04 },
-              INTRO * 0.6 - 0.04,
-            );
+            tl.to(introEl, { opacity: 0, duration: 0.04 }, INTRO * 0.6 - 0.04);
           }
 
           // Scroll hint fade
